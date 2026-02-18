@@ -14,8 +14,6 @@ void BuiltInLed::switchOn(bool blink, int intervalMs) {
         _blinkIntervalMs = intervalMs;
     } else {
         _blinkIntervalMs = 0;
-    }
-    if (_blinkState != HIGH) {
         digitalWrite(_pin, HIGH);
         _blinkState = HIGH;
     }
@@ -29,8 +27,6 @@ void BuiltInLed::switchOff() {
 
 void BuiltInLed::handle() {
     if (_blinkIntervalMs <= 0) {
-        digitalWrite(_pin, LOW);
-        _blinkState = LOW;
         return;
     }
     if (millis() - _lastBlinkTime >= static_cast<unsigned long>(_blinkIntervalMs)) {

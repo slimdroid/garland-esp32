@@ -59,30 +59,31 @@ namespace UdpManager {
         if (!udpRunning) return;
 
         int packetSize = udp.parsePacket();
-        if (packetSize) {
-            char packetBuffer[255];
-            int len = udp.read(packetBuffer, 255);
+        if (packetSize > 0) {
+            char packetBuffer[256];
+            int len = udp.read(packetBuffer, sizeof(packetBuffer) - 1);
             if (len > 0) {
                 packetBuffer[len] = 0;
             }
             String message = String(packetBuffer);
+            message.trim();
             String remoteIP = udp.remoteIP().toString();
             LOG(TAG, "UDP Received: %s from %s", message.c_str(), remoteIP.c_str());
 
-            udp.beginPacket(udp.remoteIP(), udp.remotePort());
-            String response = prepareResponse();
-            response.trim();
             if (message == HANDSHAKE_MESSAGE) {
-                udp.print(response.c_str());
+                udp.beginPacket(udp.remoteIP(), udp.remotePort());
+                String response = prepareResponse();
+                udp.print(response);
                 udp.endPacket();
-                LOG(TAG, "UDP Sent: %s to %s", response.c_str(), udp.remoteIP().toString().c_str());
+                LOG(TAG, "UDP Sent response to %s", remoteIP.c_str());
             } else if (message.startsWith(COMMAND_MARK)) {
                 // Notify listener if registered
                 if (messageCallback != nullptr) {
+                    udp.beginPacket(udp.remoteIP(), udp.remotePort());
                     if (messageCallback(message) == true) {
                         udp.print("SUCCESS");
                     } else {
-                        udp.println("FAILURE");
+                        udp.print("FAILURE");
                     }
                     udp.endPacket();
                 }

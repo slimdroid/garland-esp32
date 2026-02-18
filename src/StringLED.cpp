@@ -9,7 +9,7 @@
 // use 13 bit precision for LEDC timer
 #define LEDC_TIMER_13_BIT  13
 
-// use 5000 Hz as a LEDC base frequency
+// use 5000 Hz as a LEDC base frequency (8191 max)
 #define LEDC_BASE_FREQ     5000
 
 namespace StringLED {
@@ -22,8 +22,8 @@ namespace StringLED {
     // Arduino like analogWrite
     // value has to be between 0 and valueMax
     static void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
-        // calculate duty
-        uint32_t duty = (LEDC_BASE_FREQ / valueMax) * min(value, valueMax);
+        // calculate duty based on 13-bit resolution (8191 max)
+        uint32_t duty = (LEDC_BASE_FREQ * min(value, valueMax)) / valueMax;
         // write duty to LEDC
         ledcWrite(channel, duty);
     }

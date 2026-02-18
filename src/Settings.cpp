@@ -24,11 +24,12 @@ namespace Settings {
     static bool modeDirty = false;
     static unsigned long lastModeChange = 0;
 
-    static void saveLightModeNow() {
+    void saveLightModeNow() {
         preferences.begin(PREF_LIGHT, false);
         preferences.putInt(KEY_MODE, cachedMode);
         preferences.end();
         modeDirty = false;
+        lastModeChange = 0;
         LOG(TAG, "Light mode %d saved to NVS", cachedMode);
     }
 
@@ -68,7 +69,9 @@ namespace Settings {
         preferences.end();
         LOG(TAG, "saveSystemState: isOff=%d", isOff);
 
-        if (isOff && modeDirty) saveLightModeNow();
+        if (isOff && modeDirty) {
+            saveLightModeNow();
+        }
     }
 
     void loadLightSettings(int &mode, bool &isOff) {
