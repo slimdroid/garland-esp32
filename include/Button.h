@@ -1,16 +1,30 @@
 #pragma once
 
+/**
+ * @brief Button action types
+ */
 enum ButtonAction {
-    NO_ACTION,
-    SHORT_PRESS,
-    MEDIUM_PRESS,
-    LONG_PRESS
+    NO_ACTION,    ///< No action detected
+    SHORT_PRESS,  ///< Short press detected
+    MEDIUM_PRESS, ///< Medium press detected
+    LONG_PRESS    ///< Long press detected
 };
 
+/**
+ * @brief Class for handling button presses with debouncing and multi-stage press detection
+ */
 class Button {
 public:
+    /**
+     * @param pin GPIO pin for the button
+     * @param mode Pin mode (e.g., INPUT_PULLDOWN or INPUT_PULLUP)
+     */
     explicit Button(uint8_t pin, uint8_t mode = INPUT_PULLDOWN);
 
+    /**
+     * @brief Periodic handler to process button state and detect actions
+     * @return The detected ButtonAction
+     */
     ButtonAction handle();
 
 private:
