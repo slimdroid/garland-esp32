@@ -1,131 +1,158 @@
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+#include "StringLED.h"
+#include "BuiltInLed.h"
+#include "Button.h"
+#include "Settings.h"
+#include "Bluetooth.h"
+#include "Logging.h"
+#include "WifiManager.h"
+#include "UdpManager.h"
+#include "SocketManager.h"
+#include "DataParser.h"
 
-#define BLE_NAME "I AM ESP32"
+#define BUTTON_PIN  5
 
-#define SERVICE_REGITSTRATION_UUID "459aa3b5-52c3-4d75-a64b-9cd76f65cfbb"
-#define SERVICE_WORK_TIME_UUID "cafa0333-8a16-4a59-b706-2f0e3fd38f58"
+static const char *TAG = "MAIN";
 
-#define CHARACTERISTIC_REGITSTRATION_CREDENTIALS_UUID "b9e70f80-d55e-4cd7-bec6-14be34590efc"
-#define CHARACTERISTIC_REGITSTRATION_RESPONSE_UUID "7048479a-23f2-4f5b-8113-e60e59294b5a"
-
-#define CHARACTERISTIC_WORK_TIME_UUID "2c1529cd-f45d-4739-9738-2886fe46f7f1"
-
-#define PIN_LED 2
-
-BLECharacteristic *pCharacteristicRegistrationCredentials;
-BLECharacteristic *pCharacteristicRegistrationresponse;
-BLECharacteristic *pCharacteristicWorkTime;
-
+Button button(BUTTON_PIN);
+BuiltInLed builtInLed;
+StringLED::LightMode currentMode = StringLED::FADE;
+bool isSystemOff = false;
 unsigned long timerMillis = 0;
-bool isBleConnected = false;
 
-void enableBluetooth();
-void sendWorkedTime(int seconds);
+// Export pointers for DataParser
+namespace DataParser {
+    StringLED::LightMode *currentMode = &::currentMode;
+    bool *isSystemOff = &::isSystemOff;
+}
 
-class BLECharacteristicRegistrationResponse : public BLECharacteristicCallbacks
-{
-  void onWrite(BLECharacteristic *pCharacteristic)
-  {
-    std::string value = pCharacteristic->getValue();
+bool onCommandMessageReceived(const String &message) {
+    return DataParser::parse(message);
+}
 
-    if (value.length() > 0)
-    {
-      Serial.println("*********");
-      Serial.print("New value: ");
-      for (int i = 0; i < value.length(); i++)
-      {
-        Serial.print(value[i]);
-      }
-      Serial.println();
-
-      pCharacteristicRegistrationresponse->setValue("0");
-      pCharacteristicRegistrationresponse->notify();
+void onWifiStatusChanged(bool connected, const String &message) {
+    if (connected) {
+        SocketManager::init();
+        SocketManager::setMessageListener(onCommandMessageReceived);
+        UdpManager::init();
+        UdpManager::setMessageListener(onCommandMessageReceived);
+        // Send info back to BLE
+        Bluetooth::sendWiFiConnectInfo(true, message);
+    } else {
+        // Send info back to BLE
+        Bluetooth::sendWiFiConnectInfo(false, message);
+        SocketManager::setMessageListener(nullptr);
+        SocketManager::stop();
+        UdpManager::setMessageListener(nullptr);
+        UdpManager::stop();
     }
-  }
-};
-
-class BluetoothServerEventCallback : public BLEServerCallbacks
-{
-  void onConnect(BLEServer *server)
-  {
-    isBleConnected = true;
-    // sendDeviceState();
-    BLEDevice::stopAdvertising();
-  }
-  void onDisconnect(BLEServer *server)
-  {
-    isBleConnected = false;
-    BLEDevice::startAdvertising();
-  }
-};
-
-void setup()
-{
-  Serial.begin(115200);
-  pinMode(PIN_LED, OUTPUT);
-  enableBluetooth();
 }
 
-void loop()
-{
-  digitalWrite(PIN_LED, isBleConnected ? HIGH : LOW);
+void onBleDataReceived(String value) {
+    LOG(TAG, "Received message: %s", value.c_str());
 
-  if (millis() - timerMillis > 5000)
-  {
-    timerMillis = millis();
+    int colonIndex = value.indexOf(':');
+    if (colonIndex != -1) {
+        String ssid = value.substring(0, colonIndex);
+        String password = value.substring(colonIndex + 1);
+        LOG(TAG, "Extracted SSID: %s", ssid.c_str());
 
-    sendWorkedTime(timerMillis / 1000);
-  }
+        WiFiManager::connect(ssid, password);
+        Settings::setWiFiCredentials(ssid, password);
+    } else {
+        LOG(TAG, "Invalid format received. Expected 'ssid:password'");
+    }
 }
 
-void enableBluetooth()
-{
-  Serial.println("Starting BLE work!");
-  // BLEDevice::init(BLE_NAME + ESP.getEfuseMac());
-  BLEDevice::init(BLE_NAME);
-
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new BluetoothServerEventCallback());
-
-  BLEService *pServiceRegistration = pServer->createService(SERVICE_REGITSTRATION_UUID);
-  pCharacteristicRegistrationCredentials = pServiceRegistration->createCharacteristic(
-      CHARACTERISTIC_REGITSTRATION_CREDENTIALS_UUID, BLECharacteristic::PROPERTY_WRITE);
-  pCharacteristicRegistrationresponse = pServiceRegistration->createCharacteristic(
-      CHARACTERISTIC_REGITSTRATION_RESPONSE_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-  pCharacteristicRegistrationresponse->addDescriptor(new BLE2902());
-
-  pCharacteristicRegistrationCredentials->setCallbacks(new BLECharacteristicRegistrationResponse());
-
-  BLEService *pServiceWorkTime = pServer->createService(SERVICE_WORK_TIME_UUID);
-  pCharacteristicWorkTime = pServiceWorkTime->createCharacteristic(
-      CHARACTERISTIC_WORK_TIME_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-
-  pCharacteristicWorkTime->addDescriptor(new BLE2902());
-
-  pCharacteristicRegistrationCredentials->setValue("Tell me a few sweet words");
-
-  pServiceRegistration->start();
-  pServiceWorkTime->start();
-
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_REGITSTRATION_UUID);
-  pAdvertising->addServiceUUID(SERVICE_WORK_TIME_UUID);
-  // pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
-  pAdvertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-  Serial.println("Characteristic defined! Now you can read it in your phone!");
+void onBleStateChanged(BT_ConnectionState state) {
+    switch (state) {
+        case BT_ENABLED:
+            builtInLed.switchOn(true, 1000);
+            break;
+        case BT_CONNECTED:
+            builtInLed.switchOn(true, 200);
+            break;
+        case BT_DISCONNECTED:
+            builtInLed.switchOn(true, 1000);
+            break;
+        case BT_DISABLED:
+            builtInLed.switchOff();
+            break;
+    }
 }
 
-void sendWorkedTime(int seconds)
-{
-  if (isBleConnected)
-  {
-    pCharacteristicWorkTime->setValue(seconds);
-    pCharacteristicWorkTime->notify();
-  }
+void setup() {
+    Serial.begin(115200);
+
+    // LED initializing
+    StringLED::init();
+
+    // Restore settings
+    int savedMode;
+    Settings::loadLightSettings(savedMode, isSystemOff);
+    currentMode = static_cast<StringLED::LightMode>(savedMode);
+    LOG(TAG, "Loaded mode: %d", currentMode);
+    LOG(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
+
+    WiFiManager::init(onWifiStatusChanged);
+
+    Bluetooth::init(onBleDataReceived, onBleStateChanged);
+}
+
+static void handleTimer() {
+    if (millis() - timerMillis > 1000) {
+        timerMillis = millis();
+        Bluetooth::sendWorkedTime(timerMillis / 1000);
+    }
+}
+
+void loop() {
+    builtInLed.handle();
+
+    handleTimer();
+
+    const ButtonAction action = button.handle();
+    switch (action) {
+        case SHORT_PRESS:
+            if (!isSystemOff) {
+                currentMode = static_cast<StringLED::LightMode>((currentMode + 1) % StringLED::NUM_MODES);
+                Settings::saveLightMode(currentMode);
+                LOG(TAG, "Mode changed to: %d", currentMode);
+            }
+            break;
+        case MEDIUM_PRESS:
+            isSystemOff = !isSystemOff;
+            Settings::saveSystemState(isSystemOff);
+            if (isSystemOff) {
+                LOG(TAG, "System OFF");
+                Bluetooth::disable();
+            } else {
+                LOG(TAG, "System ON, Mode: %d", currentMode);
+            }
+            break;
+        case LONG_PRESS:
+            if (!isSystemOff) {
+                Bluetooth::enable();
+            } else {
+                isSystemOff = false;
+                Settings::saveSystemState(isSystemOff);
+                LOG(TAG, "System ON, Mode: %d", currentMode);
+            }
+            break;
+        case NO_ACTION:
+        default:
+            break;
+    }
+
+    // Mode execution
+    StringLED::handleLEDs(currentMode, isSystemOff);
+
+    Settings::handleSettingsSync();
+
+    WiFiManager::handleReconnect();
+
+    if (WiFiManager::isConnected()) {
+        UdpManager::handle();
+        SocketManager::handle();
+    }
 }
