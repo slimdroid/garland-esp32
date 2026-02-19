@@ -10,7 +10,7 @@
 #define LEDC_TIMER_13_BIT  13
 
 // use 5000 Hz as a LEDC base frequency (8191 max)
-#define LEDC_BASE_FREQ     5000
+#define LEDC_BASE_FREQ     1000
 
 namespace StringLED {
     // For non-blocking fade
