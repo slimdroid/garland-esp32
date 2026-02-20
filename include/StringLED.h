@@ -1,10 +1,5 @@
 #pragma once
 
-// LED PINs
-#define LED_PIN_R   21
-#define LED_PIN_G   22
-#define LED_PIN_B   23
-
 /**
  * @brief Management of RGB LED string
  */
@@ -27,11 +22,7 @@ namespace StringLED {
      * @param pinG GPIO pin for green channel
      * @param pinB GPIO pin for blue channel
      */
-    void init(
-        uint8_t pinR = LED_PIN_R,
-        uint8_t pinG = LED_PIN_G,
-        uint8_t pinB = LED_PIN_B
-    );
+    void init(uint8_t pinR, uint8_t pinG, uint8_t pinB);
 
     /**
      * @brief Periodic handler to update LED colors based on current mode and state

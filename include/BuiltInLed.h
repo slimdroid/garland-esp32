@@ -8,7 +8,7 @@ public:
     /**
      * @param pin GPIO pin where the LED is connected
      */
-    explicit BuiltInLed(uint8_t pin = LED_BUILTIN);
+    explicit BuiltInLed(uint8_t pin);
 
     /**
      * @brief Switches the LED on

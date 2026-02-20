@@ -9,13 +9,12 @@
 #include "UdpManager.h"
 #include "SocketManager.h"
 #include "DataParser.h"
-
-#define BUTTON_PIN  5
+#include "board/BoardSelector.h"
 
 static const char *TAG = "MAIN";
 
-Button button(BUTTON_PIN);
-BuiltInLed builtInLed;
+Button button(Pins::BUTTON);
+BuiltInLed builtInLed(Pins::LED);
 StringLED::LightMode currentMode = StringLED::FADE;
 bool isSystemOff = false;
 unsigned long timerMillis = 0;
@@ -85,7 +84,7 @@ void setup() {
     Serial.begin(115200);
 
     // LED initializing
-    StringLED::init();
+    StringLED::init(Pins::LED_R, Pins::LED_G, Pins::LED_B);
 
     // Restore settings
     int savedMode;
