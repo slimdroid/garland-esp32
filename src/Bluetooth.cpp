@@ -1,9 +1,7 @@
-#include "Bluetooth.h"
-
 #include <Arduino.h>
+#include "Bluetooth.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <BLE2902.h>
 #include "Logging.h"
 
 static const char *TAG = "BLUETOOTH";
@@ -12,12 +10,12 @@ static const char *TAG = "BLUETOOTH";
 #define BLE_NAME "I AM ESP32"
 
 // Service and characteristic UUIDs
-#define SERVICE_REGISTRATION_UUID           "459aa3b5-52c3-4d75-a64b-9cd76f65cfbb"
-#define SERVICE_WORK_TIME_UUID              "cafa0333-8a16-4a59-b706-2f0e3fd38f58"
+#define SERVICE_REGISTRATION_UUID                       "459aa3b5-52c3-4d75-a64b-9cd76f65cfbb"
+#define SERVICE_WORK_TIME_UUID                          "cafa0333-8a16-4a59-b706-2f0e3fd38f58"
 
-#define CHARACTERISTIC_REGISTRATION_CREDENTIALS_UUID "b9e70f80-d55e-4cd7-bec6-14be34590efc"
-#define CHARACTERISTIC_REGISTRATION_RESPONSE_UUID    "7048479a-23f2-4f5b-8113-e60e59294b5a"
-#define CHARACTERISTIC_WORK_TIME_UUID                "2c1529cd-f45d-4739-9738-2886fe46f7f1"
+#define CHARACTERISTIC_REGISTRATION_CREDENTIALS_UUID    "b9e70f80-d55e-4cd7-bec6-14be34590efc"
+#define CHARACTERISTIC_REGISTRATION_RESPONSE_UUID       "7048479a-23f2-4f5b-8113-e60e59294b5a"
+#define CHARACTERISTIC_WORK_TIME_UUID                   "2c1529cd-f45d-4739-9738-2886fe46f7f1"
 
 // Local (module-level) states
 static BLECharacteristic *characteristicRegistrationCredentials = nullptr;
@@ -56,9 +54,9 @@ class BluetoothServerEventCallback : public BLEServerCallbacks {
 
 class BLECharacteristicRegistrationResponseCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) override {
-        std::string value = pCharacteristic->getValue();
-        if (!value.empty() && g_credentialsCallback) {
-            g_credentialsCallback(String(value.c_str()));
+        String value = pCharacteristic->getValue();
+        if (!value.isEmpty() && g_credentialsCallback) {
+            g_credentialsCallback(value);
             LOG(TAG, "Received registration response: %s", value.c_str());
         }
     }
@@ -103,14 +101,12 @@ namespace Bluetooth {
         characteristicRegistrationResponse = serviceRegistration->createCharacteristic(
             CHARACTERISTIC_REGISTRATION_RESPONSE_UUID,
             BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-        characteristicRegistrationResponse->addDescriptor(new BLE2902());
 
         // Work time service
         BLEService *serviceWorkTime = bleServer->createService(SERVICE_WORK_TIME_UUID);
         characteristicWorkTime = serviceWorkTime->createCharacteristic(
             CHARACTERISTIC_WORK_TIME_UUID,
             BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-        characteristicWorkTime->addDescriptor(new BLE2902());
 
         serviceRegistration->start();
         serviceWorkTime->start();
