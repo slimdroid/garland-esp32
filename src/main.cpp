@@ -1,14 +1,14 @@
 #include <Arduino.h>
-#include "StringLED.h"
-#include "BuiltInLed.h"
-#include "Button.h"
-#include "Settings.h"
-#include "Bluetooth.h"
 #include "Logging.h"
-#include "WifiManager.h"
-#include "UdpManager.h"
-#include "SocketManager.h"
-#include "DataParser.h"
+#include "led_strip/StringLED.h"
+#include "built_in_led/BuiltInLed.h"
+#include "button/Button.h"
+#include "settings/Settings.h"
+#include "bluetooth/Bluetooth.h"
+#include "wifi/WifiManager.h"
+#include "udp/UdpManager.h"
+#include "socket/SocketManager.h"
+#include "parser/DataParser.h"
 #include "board/BoardSelector.h"
 
 static const char *TAG = "MAIN";

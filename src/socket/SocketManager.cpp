@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include "SocketManager.h"
-#include "Logging.h"
+#include "../Logging.h"
 
 namespace SocketManager {
     static const char *TAG = "TCP_SOCKET";
@@ -36,7 +36,7 @@ namespace SocketManager {
         if (!socketRunning || !server) return;
 
         if (!currentClient || !currentClient.connected()) {
-            currentClient = server->available();
+            currentClient = server->accept();
             if (currentClient) {
                 LOG(TAG, "TCP Client connected");
             }

@@ -2,7 +2,7 @@
 #include "Bluetooth.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include "Logging.h"
+#include "../Logging.h"
 
 static const char *TAG = "BLUETOOTH";
 

@@ -1,6 +1,6 @@
 #include <Preferences.h>
 #include "Settings.h"
-#include "Logging.h"
+#include "../Logging.h"
 
 #define PREF_NAME "wifi-settings"
 #define KEY_SSID "ssid"

@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "DataParser.h"
-#include "Logging.h"
-#include "Settings.h"
-#include "StringLED.h"
+#include "../Logging.h"
+#include "../settings/Settings.h"
+#include "../led_strip/StringLED.h"
 
 namespace DataParser {
     static const char *TAG = "PARSER";

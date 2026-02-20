@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include "WifiManager.h"
-#include "Logging.h"
-#include "Settings.h"
+#include "../Logging.h"
+#include "../settings/Settings.h"
 
 namespace WiFiManager {
     static const char *TAG = "WIFI";
