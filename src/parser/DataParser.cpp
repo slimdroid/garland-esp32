@@ -2,13 +2,13 @@
 #include "DataParser.h"
 #include "../Logging.h"
 #include "../settings/Settings.h"
-#include "../led_strip/StringLED.h"
+#include "../indicator/RgbIndicator.h"
 
 namespace DataParser {
     static const char *TAG = "PARSER";
 
     // Global variables for state management (must be passed from outside)
-    extern StringLED::LightMode *currentMode;
+    extern RgbIndicator::LightMode *currentMode;
     extern bool *isSystemOff;
 
     bool parse(const String &data) {
@@ -28,9 +28,9 @@ namespace DataParser {
                 if (valEnd == -1) valEnd = input.length();
                 
                 int mode = input.substring(valStart, valEnd).toInt();
-                if (mode >= 0 && mode < StringLED::NUM_MODES) {
+                if (mode >= 0 && mode < RgbIndicator::NUM_MODES) {
                     if (currentMode) {
-                        *currentMode = static_cast<StringLED::LightMode>(mode);
+                        *currentMode = static_cast<RgbIndicator::LightMode>(mode);
                         Settings::saveLightMode(mode);
                         LOG(TAG, "Mode set to: %d", mode);
                         return true;

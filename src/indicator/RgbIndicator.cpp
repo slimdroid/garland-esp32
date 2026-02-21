@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "StringLED.h"
+#include "RgbIndicator.h"
 
 // use 13 bit precision for LEDC timer
 #define LEDC_TIMER_13_BIT  13
@@ -7,7 +7,7 @@
 // use 5000 Hz as a LEDC base frequency (8191 max)
 #define LEDC_BASE_FREQ     1000
 
-namespace StringLED {
+namespace RgbIndicator {
     // For non-blocking fade
     static int fadeValue = 0;
     static int fadeDirection = 1;

@@ -3,7 +3,7 @@
 /**
  * @brief Management of RGB LED string
  */
-namespace StringLED {
+namespace RgbIndicator {
     /**
      * @brief Available lighting modes
      */
