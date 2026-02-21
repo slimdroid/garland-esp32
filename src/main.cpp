@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
-#include "indicator/RgbIndicator.h"
 #include "built_in_led/BuiltInLed.h"
 #include "button/Button.h"
 #include "settings/Settings.h"
@@ -10,22 +9,22 @@
 #include "socket/SocketManager.h"
 #include "parser/DataParser.h"
 #include "board/BoardSelector.h"
-#include <FastLED.h>
+#include "effects/Effects.h"
 
-#undef ARDUHAL_LOG_FORMAT
-#define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_ ## letter "[" #letter "]: " format ARDUHAL_LOG_RESET_COLOR "\r\n"
+// #undef ARDUHAL_LOG_FORMAT
+// #define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_ ## letter "[" #letter "]: " format ARDUHAL_LOG_RESET_COLOR "\r\n"
 
 static const char *TAG = "MAIN";
 
 Button button(Pins::BUTTON);
 BuiltInLed builtInLed(Pins::LED);
-RgbIndicator::LightMode currentMode = RgbIndicator::FADE;
+Effects::Mode currentMode = Effects::RAINBOW;
 bool isSystemOff = false;
 unsigned long timerMillis = 0;
 
 // Export pointers for DataParser
 namespace DataParser {
-    RgbIndicator::LightMode *currentMode = &::currentMode;
+    Effects::Mode *currentMode = &::currentMode;
     bool *isSystemOff = &::isSystemOff;
 }
 
@@ -87,13 +86,13 @@ void onBleStateChanged(BT_ConnectionState state) {
 void setup() {
     Serial.begin(115200);
 
-    // LED initializing
-    RgbIndicator::init(Pins::LED_R, Pins::LED_G, Pins::LED_B);
+    // Effects and FastLED initializing
+    Effects::init();
 
     // Restore settings
     int savedMode;
     Settings::loadLightSettings(savedMode, isSystemOff);
-    currentMode = static_cast<RgbIndicator::LightMode>(savedMode);
+    currentMode = static_cast<Effects::Mode>(savedMode);
     ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
 
@@ -118,7 +117,7 @@ void loop() {
     switch (action) {
         case SHORT_PRESS:
             if (!isSystemOff) {
-                currentMode = static_cast<RgbIndicator::LightMode>((currentMode + 1) % RgbIndicator::NUM_MODES);
+                currentMode = static_cast<Effects::Mode>((currentMode + 1) % Effects::NUM_MODES);
                 Settings::saveLightMode(currentMode);
                 ESP_LOGI(TAG, "Mode changed to: %d", currentMode);
             }
@@ -148,7 +147,7 @@ void loop() {
     }
 
     // Mode execution
-    RgbIndicator::handleLEDs(currentMode, isSystemOff);
+    Effects::handle(currentMode, isSystemOff);
 
     Settings::handleSettingsSync();
 

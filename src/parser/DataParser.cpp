@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include "DataParser.h"
 #include "../settings/Settings.h"
-#include "../indicator/RgbIndicator.h"
+#include "../effects/Effects.h"
 
 namespace DataParser {
     static const char *TAG = "PARSER";
 
     // Global variables for state management (must be passed from outside)
-    extern RgbIndicator::LightMode *currentMode;
+    extern Effects::Mode *currentMode;
     extern bool *isSystemOff;
 
     bool parse(const String &data) {
@@ -27,9 +27,9 @@ namespace DataParser {
                 if (valEnd == -1) valEnd = input.length();
                 
                 int mode = input.substring(valStart, valEnd).toInt();
-                if (mode >= 0 && mode < RgbIndicator::NUM_MODES) {
+                if (mode >= 0 && mode < Effects::NUM_MODES) {
                     if (currentMode) {
-                        *currentMode = static_cast<RgbIndicator::LightMode>(mode);
+                        *currentMode = static_cast<Effects::Mode>(mode);
                         Settings::saveLightMode(mode);
                         ESP_LOGI(TAG, "Mode set to: %d", mode);
                         return true;

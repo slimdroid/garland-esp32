@@ -1,19 +1,23 @@
 #include <Arduino.h>
 #include "Button.h"
 
-Button::Button(const uint8_t pin, const uint8_t mode)
+Button::Button(const uint8_t pin)
     : _pin(pin),
-      _lastState(LOW),
+      _activeLow(HIGH),
+      _lastState(HIGH),
       _isPressed(false),
       _longPressSent(false),
       _lastDebounceTime(0),
       _pressStartTime(0) {
-    pinMode(pin, mode);
+    pinMode(pin, INPUT_PULLUP);
 }
 
 ButtonAction Button::handle() {
     ButtonAction action = NO_ACTION;
-    const bool currentState = digitalRead(_pin);
+    bool currentState = digitalRead(_pin);
+    if (_activeLow) {
+        currentState = !currentState;
+    }
     const unsigned long now = millis();
 
     if (currentState != _lastState) {

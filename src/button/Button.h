@@ -17,9 +17,8 @@ class Button {
 public:
     /**
      * @param pin GPIO pin for the button
-     * @param mode Pin mode (e.g., INPUT_PULLDOWN or INPUT_PULLUP)
      */
-    explicit Button(uint8_t pin, uint8_t mode = INPUT_PULLDOWN);
+    explicit Button(uint8_t pin);
 
     /**
      * @brief Periodic handler to process button state and detect actions
@@ -29,6 +28,7 @@ public:
 
 private:
     uint8_t _pin;
+    bool _activeLow;
     bool _lastState;
     bool _isPressed;
     bool _longPressSent;
