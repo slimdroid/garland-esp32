@@ -1,6 +1,5 @@
 #include <Preferences.h>
 #include "Settings.h"
-#include "../Logging.h"
 
 #define PREF_NAME "wifi-settings"
 #define KEY_SSID "ssid"
@@ -30,7 +29,7 @@ namespace Settings {
         preferences.end();
         modeDirty = false;
         lastModeChange = 0;
-        LOG(TAG, "Light mode %d saved to NVS", cachedMode);
+        ESP_LOGI(TAG, "Light mode %d saved to NVS", cachedMode);
     }
 
     bool getWiFiCredentials(String &ssid, String &password) {
@@ -38,7 +37,7 @@ namespace Settings {
         ssid = preferences.getString(KEY_SSID, KEY_SSID_DEF);
         password = preferences.getString(KEY_PASS, KEY_PASS_DEF);
         preferences.end();
-        LOG(TAG,
+        ESP_LOGI(TAG,
             "Get network credentials - SSID: %s, PASSWORD: %s",
             ssid.c_str(),
             password.c_str());
@@ -50,7 +49,7 @@ namespace Settings {
         preferences.putString(KEY_SSID, ssid);
         preferences.putString(KEY_PASS, password);
         preferences.end();
-        LOG(TAG,
+        ESP_LOGI(TAG,
             "Network credentials have been saved - SSID: %s, PASSWORD: %s",
             ssid.c_str(),
             password.c_str());
@@ -60,14 +59,14 @@ namespace Settings {
         cachedMode = mode;
         modeDirty = true;
         lastModeChange = millis();
-        LOG(TAG, "saveLightMode: mode=%d", mode);
+        ESP_LOGD(TAG, "saveLightMode: mode=%d", mode);
     }
 
     void saveSystemState(const bool isOff) {
         preferences.begin(PREF_LIGHT, false);
         preferences.putBool(KEY_OFF, isOff);
         preferences.end();
-        LOG(TAG, "saveSystemState: isOff=%d", isOff);
+        ESP_LOGD(TAG, "saveSystemState: isOff=%d", isOff);
 
         if (isOff && modeDirty) {
             saveLightModeNow();
@@ -79,7 +78,7 @@ namespace Settings {
         mode = preferences.getInt(KEY_MODE, KEY_MODE_DEF);
         isOff = preferences.getBool(KEY_OFF, KEY_OFF_DEF);
         preferences.end();
-        LOG(TAG, "loadLightSettings: mode=%d, isOff=%d", mode, isOff);
+        ESP_LOGI(TAG, "loadLightSettings: mode=%d, isOff=%d", mode, isOff);
     }
 
     void handleSettingsSync() {

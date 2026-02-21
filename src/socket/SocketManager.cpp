@@ -1,6 +1,5 @@
 #include <WiFi.h>
 #include "SocketManager.h"
-#include "../Logging.h"
 
 namespace SocketManager {
     static const char *TAG = "TCP_SOCKET";
@@ -17,7 +16,7 @@ namespace SocketManager {
         server = new WiFiServer(port);
         server->begin();
         socketRunning = true;
-        LOG(TAG, "TCP Server started on port %d", port);
+        ESP_LOGI(TAG, "TCP Server started on port %d", port);
     }
 
     void setMessageListener(SocketMessageCallback callback) {
@@ -29,7 +28,7 @@ namespace SocketManager {
             server->stop();
         }
         socketRunning = false;
-        LOG(TAG, "TCP Server stopped");
+        ESP_LOGI(TAG, "TCP Server stopped");
     }
 
     void handle() {
@@ -38,7 +37,7 @@ namespace SocketManager {
         if (!currentClient || !currentClient.connected()) {
             currentClient = server->accept();
             if (currentClient) {
-                LOG(TAG, "TCP Client connected");
+                ESP_LOGI(TAG, "TCP Client connected");
             }
         }
 
@@ -46,7 +45,7 @@ namespace SocketManager {
             if (currentClient.available()) {
                 String data = currentClient.readStringUntil('\n');
                 data.trim();
-                LOG(TAG, "TCP Received: %s", data.c_str());
+                ESP_LOGD(TAG, "TCP Received: %s", data.c_str());
                 if (messageCallback != nullptr) {
                     if (messageCallback(data) == true) {
                         currentClient.print("SUCCESS");
@@ -59,7 +58,7 @@ namespace SocketManager {
             if (millis() - lastHeartbeatMillis > HEARTBEAT_INTERVAL) {
                 lastHeartbeatMillis = millis();
                 currentClient.println(lastHeartbeatMillis);
-                LOG(TAG, "TCP Heartbeat sent: %lu", lastHeartbeatMillis);
+                ESP_LOGV(TAG, "TCP Heartbeat sent: %lu", lastHeartbeatMillis);
             }
         }
     }

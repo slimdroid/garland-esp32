@@ -1,7 +1,6 @@
 #include <WiFiUdp.h>
 #include "UdpManager.h"
 #include <WiFi.h>
-#include "../Logging.h"
 
 #define COMMAND_MARK "Cmd"
 
@@ -43,16 +42,16 @@ namespace UdpManager {
     void init(uint16_t port) {
         if (udp.begin(port)) {
             udpRunning = true;
-            LOG(TAG, "UDP started on port %d", port);
+            ESP_LOGI(TAG, "UDP started on port %d", port);
         } else {
-            LOG(TAG, "Failed to start UDP");
+            ESP_LOGW(TAG, "Failed to start UDP");
         }
     }
 
     void stop() {
         udp.stop();
         udpRunning = false;
-        LOG(TAG, "UDP stopped");
+        ESP_LOGI(TAG, "UDP stopped");
     }
 
     void handle() {
@@ -68,14 +67,14 @@ namespace UdpManager {
             String message = String(packetBuffer);
             message.trim();
             String remoteIP = udp.remoteIP().toString();
-            LOG(TAG, "UDP Received: %s from %s", message.c_str(), remoteIP.c_str());
+            ESP_LOGD(TAG, "UDP Received: %s from %s", message.c_str(), remoteIP.c_str());
 
             if (message == HANDSHAKE_MESSAGE) {
                 udp.beginPacket(udp.remoteIP(), udp.remotePort());
                 String response = prepareResponse();
                 udp.print(response);
                 udp.endPacket();
-                LOG(TAG, "UDP Sent response to %s", remoteIP.c_str());
+                ESP_LOGD(TAG, "UDP Sent response to %s", remoteIP.c_str());
             } else if (message.startsWith(COMMAND_MARK)) {
                 // Notify listener if registered
                 if (messageCallback != nullptr) {
@@ -93,6 +92,6 @@ namespace UdpManager {
 
     void setMessageListener(UdpMessageCallback callback) {
         messageCallback = callback;
-        LOG(TAG, "Message listener %s", callback != nullptr ? "registered" : "unregistered");
+        ESP_LOGD(TAG, "Message listener %s", callback != nullptr ? "registered" : "unregistered");
     }
 }

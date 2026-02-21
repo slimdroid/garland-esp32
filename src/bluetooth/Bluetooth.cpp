@@ -2,7 +2,6 @@
 #include "Bluetooth.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include "../Logging.h"
 
 static const char *TAG = "BLUETOOTH";
 
@@ -36,18 +35,18 @@ class BluetoothServerEventCallback : public BLEServerCallbacks {
         bleConnected = true;
         if (g_stateCallback) g_stateCallback(BT_CONNECTED);
         BLEDevice::stopAdvertising();
-        LOG(TAG, "Device connected");
+        ESP_LOGI(TAG, "Device connected");
     }
 
     void onDisconnect(BLEServer *server) override {
         if (bleStarted) {
             bleConnected = false;
             if (g_stateCallback) g_stateCallback(BT_DISCONNECTED);
-            LOG(TAG, "Device disconnected");
+            ESP_LOGI(TAG, "Device disconnected");
             server->startAdvertising();
-            LOG(TAG, "Advertising restarted");
+            ESP_LOGI(TAG, "Advertising restarted");
         } else {
-            LOG(TAG, "BLE stopped, not restarting advertising");
+            ESP_LOGI(TAG, "BLE stopped, not restarting advertising");
         }
     }
 };
@@ -57,7 +56,7 @@ class BLECharacteristicRegistrationResponseCallbacks : public BLECharacteristicC
         String value = pCharacteristic->getValue();
         if (!value.isEmpty() && g_credentialsCallback) {
             g_credentialsCallback(value);
-            LOG(TAG, "Received registration response: %s", value.c_str());
+            ESP_LOGI(TAG, "Received registration response: %s", value.c_str());
         }
     }
 };
@@ -76,11 +75,11 @@ namespace Bluetooth {
 
     void enable() {
         if (bleStarted) {
-            LOG(TAG, "BLE already started");
+            ESP_LOGD(TAG, "BLE already started");
             return;
         }
 
-        LOG(TAG, "Starting BLE work!");
+        ESP_LOGI(TAG, "Starting BLE work!");
         if (!isInitialized) {
             BLEDevice::init(BLE_NAME);
             isInitialized = true;
@@ -123,15 +122,15 @@ namespace Bluetooth {
         if (g_stateCallback) {
             g_stateCallback(BT_ENABLED);
         }
-        LOG(TAG, "Characteristic defined! Now you can read it in your phone!");
+        ESP_LOGD(TAG, "Characteristic defined! Now you can read it in your phone!");
     }
 
     void disable() {
         if (!bleStarted) {
-            LOG(TAG, "BLE already stopped");
+            ESP_LOGD(TAG, "BLE already stopped");
             return;
         }
-        LOG(TAG, "Stopping BLE work!");
+        ESP_LOGI(TAG, "Stopping BLE work!");
 
         // 1. Reset state flags BEFORE deinitialization
         bleStarted = false;
@@ -142,12 +141,12 @@ namespace Bluetooth {
         if (bleServer != nullptr) {
             uint32_t connCount = bleServer->getConnectedCount();
             if (connCount > 0) {
-                LOG(TAG, "Disconnecting %d clients", connCount);
+                ESP_LOGI(TAG, "Disconnecting %d clients", connCount);
                 // There is no simple way to disconnect all at once in the standard library,
                 // but we can get the map of connected devices from the server.
                 auto peerDevices = bleServer->getPeerDevices(false);
                 for (auto const &[conn_id, status]: peerDevices) {
-                    LOG(TAG, "Disconnecting conn_id: %d", conn_id);
+                    ESP_LOGD(TAG, "Disconnecting conn_id: %d", conn_id);
                     bleServer->disconnect(conn_id);
                 }
             }
@@ -171,7 +170,7 @@ namespace Bluetooth {
         if (g_stateCallback) {
             g_stateCallback(BT_DISABLED);
         }
-        LOG(TAG, "BLE has been stopped");
+        ESP_LOGI(TAG, "BLE has been stopped");
     }
 
     void sendWiFiConnectInfo(bool success, const String &value) {

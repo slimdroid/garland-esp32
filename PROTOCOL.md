@@ -285,7 +285,7 @@ else if (command == "new_command") {
     // Execute action
     // ... your code ...
     
-    LOG(TAG, "New command executed");
+    ESP_LOGI(TAG, "New command executed");
     return true;
 }
 ```

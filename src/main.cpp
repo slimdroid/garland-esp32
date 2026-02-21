@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
-#include "Logging.h"
 #include "indicator/RgbIndicator.h"
 #include "built_in_led/BuiltInLed.h"
 #include "button/Button.h"
@@ -53,18 +52,18 @@ void onWifiStatusChanged(bool connected, const String &message) {
 }
 
 void onBleDataReceived(String value) {
-    LOG(TAG, "Received message: %s", value.c_str());
+    ESP_LOGI(TAG, "Received message: %s", value.c_str());
 
     int colonIndex = value.indexOf(':');
     if (colonIndex != -1) {
         String ssid = value.substring(0, colonIndex);
         String password = value.substring(colonIndex + 1);
-        LOG(TAG, "Extracted SSID: %s", ssid.c_str());
+        ESP_LOGI(TAG, "Extracted SSID: %s", ssid.c_str());
 
         WiFiManager::connect(ssid, password);
         Settings::setWiFiCredentials(ssid, password);
     } else {
-        LOG(TAG, "Invalid format received. Expected 'ssid:password'");
+        ESP_LOGW(TAG, "Invalid format received. Expected 'ssid:password'");
     }
 }
 
@@ -95,8 +94,8 @@ void setup() {
     int savedMode;
     Settings::loadLightSettings(savedMode, isSystemOff);
     currentMode = static_cast<RgbIndicator::LightMode>(savedMode);
-    LOG(TAG, "Loaded mode: %d", currentMode);
-    LOG(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
+    ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
+    ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
 
     WiFiManager::init(onWifiStatusChanged);
 
@@ -121,17 +120,17 @@ void loop() {
             if (!isSystemOff) {
                 currentMode = static_cast<RgbIndicator::LightMode>((currentMode + 1) % RgbIndicator::NUM_MODES);
                 Settings::saveLightMode(currentMode);
-                LOG(TAG, "Mode changed to: %d", currentMode);
+                ESP_LOGI(TAG, "Mode changed to: %d", currentMode);
             }
             break;
         case MEDIUM_PRESS:
             isSystemOff = !isSystemOff;
             Settings::saveSystemState(isSystemOff);
             if (isSystemOff) {
-                LOG(TAG, "System OFF");
+                ESP_LOGI(TAG, "System OFF");
                 Bluetooth::disable();
             } else {
-                LOG(TAG, "System ON, Mode: %d", currentMode);
+                ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
             break;
         case LONG_PRESS:
@@ -140,7 +139,7 @@ void loop() {
             } else {
                 isSystemOff = false;
                 Settings::saveSystemState(isSystemOff);
-                LOG(TAG, "System ON, Mode: %d", currentMode);
+                ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
             break;
         case NO_ACTION:

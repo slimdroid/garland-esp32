@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "DataParser.h"
-#include "../Logging.h"
 #include "../settings/Settings.h"
 #include "../indicator/RgbIndicator.h"
 
@@ -14,7 +13,7 @@ namespace DataParser {
     bool parse(const String &data) {
         String input = data;
         input.trim();
-        LOG(TAG, "DATA: %s ", input.c_str());
+        ESP_LOGD(TAG, "DATA: %s ", input.c_str());
 
         // Simple parsing for JSON-like format
         // Supports: set_mode, set_power, get_status, set_wifi
@@ -32,7 +31,7 @@ namespace DataParser {
                     if (currentMode) {
                         *currentMode = static_cast<RgbIndicator::LightMode>(mode);
                         Settings::saveLightMode(mode);
-                        LOG(TAG, "Mode set to: %d", mode);
+                        ESP_LOGI(TAG, "Mode set to: %d", mode);
                         return true;
                     }
                 }
@@ -50,14 +49,14 @@ namespace DataParser {
                 if (isSystemOff) {
                     *isSystemOff = (state == 0);
                     Settings::saveSystemState(*isSystemOff);
-                    LOG(TAG, "System power set to: %s", *isSystemOff ? "OFF" : "ON");
+                    ESP_LOGI(TAG, "System power set to: %s", *isSystemOff ? "OFF" : "ON");
                     return true;
                 }
             }
         }
         else if (input.indexOf("\"cmd\":\"get_status\"") != -1) {
             if (currentMode && isSystemOff) {
-                LOG(TAG, "Status - Mode: %d, Power: %s", *currentMode, *isSystemOff ? "OFF" : "ON");
+                ESP_LOGI(TAG, "Status - Mode: %d, Power: %s", *currentMode, *isSystemOff ? "OFF" : "ON");
                 return true;
             }
         }
@@ -75,12 +74,12 @@ namespace DataParser {
             
             if (ssid.length() > 0) {
                 Settings::setWiFiCredentials(ssid, pass);
-                LOG(TAG, "WiFi credentials saved - SSID: %s", ssid.c_str());
+                ESP_LOGI(TAG, "WiFi credentials saved - SSID: %s", ssid.c_str());
                 return true;
             }
         }
         
-        LOG(TAG, "ERROR: Parsing failed or unknown command");
+        ESP_LOGW(TAG, "ERROR: Parsing failed or unknown command");
         return false;
     }
 }
