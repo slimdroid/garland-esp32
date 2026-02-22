@@ -10,8 +10,8 @@
 #include "board/BoardSelector.h"
 #include "effects/Effects.h"
 
-// #undef ARDUHAL_LOG_FORMAT
-// #define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_ ## letter "[" #letter "]: " format ARDUHAL_LOG_RESET_COLOR "\r\n"
+#undef ARDUHAL_LOG_FORMAT
+#define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_ ## letter "[" #letter "]: " format ARDUHAL_LOG_RESET_COLOR "\r\n"
 
 static const char *TAG = "MAIN";
 
