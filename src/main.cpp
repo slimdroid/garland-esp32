@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
-#include "built_in_led/BuiltInLed.h"
 #include "button/Button.h"
 #include "settings/Settings.h"
 #include "bluetooth/Bluetooth.h"
@@ -17,7 +16,7 @@
 static const char *TAG = "MAIN";
 
 Button button(Pins::BUTTON);
-BuiltInLed builtInLed(Pins::LED);
+BtIndicator btIndicator;
 Effects::Mode currentMode = Effects::RAINBOW;
 bool isSystemOff = false;
 unsigned long timerMillis = 0;
@@ -67,20 +66,7 @@ void onBleDataReceived(String value) {
 }
 
 void onBleStateChanged(BT_ConnectionState state) {
-    switch (state) {
-        case BT_ENABLED:
-            builtInLed.switchOn(true, 1000);
-            break;
-        case BT_CONNECTED:
-            builtInLed.switchOn(true, 200);
-            break;
-        case BT_DISCONNECTED:
-            builtInLed.switchOn(true, 1000);
-            break;
-        case BT_DISABLED:
-            builtInLed.switchOff();
-            break;
-    }
+    btIndicator.setState(state);
 }
 
 void setup() {
@@ -109,7 +95,7 @@ static void handleTimer() {
 }
 
 void loop() {
-    builtInLed.handle();
+    btIndicator.handle();
 
     handleTimer();
 
