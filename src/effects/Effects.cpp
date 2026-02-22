@@ -2,9 +2,9 @@
 #include "../board/BoardSelector.h"
 
 namespace Effects {
-    int numLeds = 30;       // Количество светодиодов (по умолчанию)
-    int brightness = 51;    // Яркость: 20% от 255 (по умолчанию)
-    CRGB leds[256];         // Максимальный буфер для светодиодов
+    int numLeds = 30;       // Number of LEDs (default)
+    int brightness = 51;    // Brightness: 20% of 255 (default)
+    CRGB leds[256];         // Maximum buffer for LEDs
 
     void init() {
         FastLED.addLeds<WS2812B, Pins::STRIP, GRB>(leds, numLeds);
@@ -75,7 +75,7 @@ namespace Effects {
     }
 
     void fire() {
-        // Упрощенный эффект огня
+        // Simplified fire effect
         for (int i = 0; i < numLeds; i++) {
             uint8_t noise = qsub8(inoise8(i * 60, millis() / 4), 16);
             leds[i] = CHSV(10 + (noise / 8), 255, noise);
