@@ -113,13 +113,16 @@ void loop() {
 
     handleTimer();
 
-    const ButtonAction action = button.handle();
-    switch (action) {
+    switch (button.handle()) {
         case SHORT_PRESS:
             if (!isSystemOff) {
                 currentMode = static_cast<Effects::Mode>((currentMode + 1) % Effects::NUM_MODES);
                 Settings::saveLightMode(currentMode);
                 ESP_LOGI(TAG, "Mode changed to: %d", currentMode);
+            } else {
+                isSystemOff = false;
+                Settings::saveSystemState(isSystemOff);
+                ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
             break;
         case MEDIUM_PRESS:
