@@ -1,45 +1,68 @@
-# ESP32 RGB LED Controller
+# ESP32 Garland LED Strip Controller
 
 ## Project Description
 
-This is a firmware project for ESP32 microcontroller that provides remote control of RGB LED strips via multiple communication interfaces. The device supports WiFi connectivity, Bluetooth Low Energy (BLE), WebSocket, and UDP protocols for flexible control options.
+This is a firmware project for ESP32 microcontroller that provides remote control of addressable LED strips (WS2812B or similar) via multiple communication interfaces. The device supports WiFi connectivity, Bluetooth Low Energy (BLE), WebSocket, and UDP protocols for flexible control options.
 
 ### Key Features
+
+- **LED Strip Control:**
+  - Full control over addressable LED strips (WS2812B or compatible) via FastLED library
+  - Configurable number of LEDs (1–256, default: 30)
+  - Adjustable brightness (0–255, default: 51)
+  - 14 built-in lighting effects
+
+- **Lighting Effects:**
+  - RAINBOW - smooth rainbow cycling
+  - CYLON - bouncing scanner effect
+  - SPARKLE - random sparkling
+  - FIRE - fire simulation
+  - CONFETTI - random colorful flashes
+  - SINELON - sine wave scanning dot
+  - JUGGLE - multiple dots juggling
+  - BPM - beat-synced palette blending
+  - SNOW - falling snow effect
+  - COMET - comet trail effect
+  - RAINBOW_GLITTER - rainbow with glitter
+  - COLOR_WAVES - flowing color waves
+  - THEATER_CHASE - theater-style chasing lights
+  - SOLID_GLOW - steady solid color glow
 
 - **Multiple Control Interfaces:**
   - Bluetooth Low Energy (BLE) for initial setup and mobile control
   - WiFi connectivity with automatic reconnection
   - WebSocket server for real-time bidirectional communication
   - UDP server for fast command delivery
-  
-- **LED Control Modes:**
-  - FADE - smooth color transitions
-  - RED - solid red color
-  - GREEN - solid green color
-  - BLUE - solid blue color
-  - WHITE - solid white color
 
 - **Physical Controls:**
   - Button support for local control
-  - Built-in LED status indicator
-  - Short press - cycle through LED modes
-  - Medium press - toggle system power
-  - Long press - enable Bluetooth pairing
+  - Built-in LED status indicator for BLE state
+  - Short press — cycle through LED effects
+  - Medium press — toggle system power
+  - Long press — enable Bluetooth pairing
 
 - **Persistent Settings:**
   - All settings stored in non-volatile memory (NVS)
   - WiFi credentials persistence
-  - LED mode and power state restoration after reboot
+  - LED effect, brightness, LED count, and power state restoration after reboot
 
 - **Command Protocol:**
-  - JSON-like command format
-  - Support for mode switching, power control, status queries, and WiFi configuration
+  - JSON command format
+  - Support for mode switching, brightness/LED count control, power control, status queries, and WiFi configuration
   - See [PROTOCOL.md](PROTOCOL.md) for detailed protocol documentation
+
+### Supported Boards
+
+| Board | Environment |
+|---|---|
+| ESP32-DOIT-DEVKIT-V1 | `esp32doit-devkit-v1` |
+| M5Stack NanoC6 | `m5stack-nanoc6` |
+| M5Stack AtomS3 | `m5stack-atoms3` |
 
 ### Hardware Requirements
 
-- ESP32 development board (ESP32-DOIT-DEVKIT-V1 or compatible)
-- RGB LED strip (WS2812B or similar)
+- One of the supported ESP32 development boards (see above)
+- Addressable LED strip (WS2812B or similar)
 - Push button
 - Power supply
 
@@ -47,33 +70,18 @@ This is a firmware project for ESP32 microcontroller that provides remote contro
 
 - **Platform:** PlatformIO
 - **Framework:** Arduino for ESP32
-- **Board:** ESP32-DOIT-DEVKIT-V1
-- **Platform Version:** espressif32 @ 6.12.0
-
-### Project Structure
-
-```
-├── include/          # Header files
-├── src/              # Source files
-│   ├── main.cpp      # Main application entry point
-│   ├── Bluetooth.cpp # BLE functionality
-│   ├── DataParser.cpp # Command parser
-│   ├── StringLED.cpp # LED control
-│   ├── Button.cpp    # Button handling
-│   ├── Settings.cpp  # NVS settings management
-│   ├── WifiManager.cpp # WiFi connection management
-│   ├── SocketManager.cpp # WebSocket server
-│   └── UdpManager.cpp # UDP server
-├── PROTOCOL.md       # Communication protocol documentation
-├── EXAMPLES.md       # Usage examples
-└── platformio.ini    # PlatformIO configuration
-```
+- **LED Library:** FastLED @ ^3.10.3
+- **Platform:** pioarduino espressif32 (develop)
 
 ### Getting Started
 
-1. **Build and Upload:**
+1. **Select the target board and build/upload:**
    ```bash
-   pio run -t upload
+   pio run -e esp32doit-devkit-v1 -t upload
+   # or
+   pio run -e m5stack-nanoc6 -t upload
+   # or
+   pio run -e m5stack-atoms3 -t upload
    ```
 
 2. **Monitor Serial Output:**
@@ -97,7 +105,7 @@ This is a firmware project for ESP32 microcontroller that provides remote contro
 
 ### References
 
-- [Data Parsing Example](https://www.youtube.com/watch?v=Ul03Vkg9A40)
+- [FastLED Library](https://github.com/FastLED/FastLED)
 - [ESP32 Parallel Execution](https://randomnerdtutorials.com/projects-esp32/)
 - [ESP32 Dual Core Arduino IDE](https://randomnerdtutorials.com/esp32-dual-core-arduino-ide)
 - [ESP32 TCP/IP Socket Server Example](https://github.com/phfbertoleti/esp32_tcp_ip_socket_server_example/blob/main/esp32_tcp_server_socket_example/main/socket_tcp_server/socket_tcp_server.c)
