@@ -21,12 +21,6 @@ Effects::Mode currentMode = Effects::RAINBOW;
 bool isSystemOff = false;
 unsigned long timerMillis = 0;
 
-// Export pointers for DataParser
-namespace DataParser {
-    Effects::Mode *currentMode = &::currentMode;
-    bool *isSystemOff = &::isSystemOff;
-}
-
 bool onCommandMessageReceived(const String &message) {
     return DataParser::parse(message);
 }
@@ -86,6 +80,8 @@ void setup() {
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
     ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
     ESP_LOGI(TAG, "Brightness: %d, LED count: %d", savedBrightness, savedNumLeds);
+
+    DataParser::setContext(&currentMode, &isSystemOff);
 
     WiFiManager::init(onWifiStatusChanged);
 

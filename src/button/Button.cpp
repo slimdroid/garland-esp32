@@ -3,7 +3,7 @@
 
 Button::Button(const uint8_t pin)
     : _pin(pin),
-      _activeLow(HIGH),
+      _activeLow(true),
       _lastState(HIGH),
       _isPressed(false),
       _longPressSent(false),

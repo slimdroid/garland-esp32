@@ -45,7 +45,7 @@ namespace Settings {
             "Get network credentials - SSID: %s, PASSWORD: %s",
             ssid.c_str(),
             password.c_str());
-        return ssid != KEY_SSID_DEF && password != KEY_PASS_DEF;
+        return !ssid.isEmpty();
     }
 
     void setWiFiCredentials(const String &ssid, const String &password) {

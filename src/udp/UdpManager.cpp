@@ -61,9 +61,8 @@ namespace UdpManager {
         if (packetSize > 0) {
             char packetBuffer[256];
             int len = udp.read(packetBuffer, sizeof(packetBuffer) - 1);
-            if (len > 0) {
-                packetBuffer[len] = 0;
-            }
+            if (len <= 0) return;
+            packetBuffer[len] = 0;
             String message = String(packetBuffer);
             message.trim();
             String remoteIP = udp.remoteIP().toString();

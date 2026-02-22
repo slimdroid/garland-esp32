@@ -29,19 +29,4 @@ namespace Effects {
     void handle(Mode mode, bool isSystemOff);
     void setBrightness(int value);
     void setNumLeds(int value);
-
-    void rainbow();
-    void cylon();
-    void sparkle();
-    void fire();
-    void confetti();
-    void sinelon();
-    void juggle();
-    void bpm();
-    void snow();
-    void comet();
-    void rainbow_glitter();
-    void color_waves();
-    void theater_chase();
-    void solid_glow();
 }

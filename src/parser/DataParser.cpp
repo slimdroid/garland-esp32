@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "DataParser.h"
 #include "../settings/Settings.h"
 #include "../effects/Effects.h"
@@ -6,112 +7,103 @@
 namespace DataParser {
     static const char *TAG = "PARSER";
 
-    // Global variables for state management (must be passed from outside)
-    extern Effects::Mode *currentMode;
-    extern bool *isSystemOff;
+    static Effects::Mode *s_currentMode = nullptr;
+    static bool *s_isSystemOff = nullptr;
+
+    void setContext(Effects::Mode *mode, bool *isSystemOff) {
+        s_currentMode = mode;
+        s_isSystemOff = isSystemOff;
+    }
 
     bool parse(const String &data) {
         String input = data;
         input.trim();
-        ESP_LOGD(TAG, "DATA: %s ", input.c_str());
+        ESP_LOGD(TAG, "DATA: %s", input.c_str());
 
-        // Simple parsing for JSON-like format
-        // Supports: set_mode, set_power, get_status, set_wifi, set_brightness, set_led_count
-        
-        if (input.indexOf("\"cmd\":\"set_mode\"") != -1) {
-            int modeIdx = input.indexOf("\"mode\":");
-            if (modeIdx != -1) {
-                int valStart = modeIdx + 7;
-                int valEnd = input.indexOf(',', valStart);
-                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
-                if (valEnd == -1) valEnd = input.length();
-                
-                int mode = input.substring(valStart, valEnd).toInt();
-                if (mode >= 0 && mode < Effects::NUM_MODES) {
-                    if (currentMode) {
-                        *currentMode = static_cast<Effects::Mode>(mode);
-                        Settings::saveLightMode(mode);
-                        ESP_LOGI(TAG, "Mode set to: %d", mode);
-                        return true;
-                    }
-                }
-            }
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, input);
+        if (err) {
+            ESP_LOGW(TAG, "JSON parse error: %s", err.c_str());
+            return false;
         }
-        else if (input.indexOf("\"cmd\":\"set_power\"") != -1) {
-            int stateIdx = input.indexOf("\"state\":");
-            if (stateIdx != -1) {
-                int valStart = stateIdx + 8;
-                int valEnd = input.indexOf(',', valStart);
-                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
-                if (valEnd == -1) valEnd = input.length();
-                
-                int state = input.substring(valStart, valEnd).toInt();
-                if (isSystemOff) {
-                    *isSystemOff = (state == 0);
-                    Settings::saveSystemState(*isSystemOff);
-                    ESP_LOGI(TAG, "System power set to: %s", *isSystemOff ? "OFF" : "ON");
-                    return true;
-                }
-            }
-        }
-        else if (input.indexOf("\"cmd\":\"get_status\"") != -1) {
-            if (currentMode && isSystemOff) {
-                ESP_LOGI(TAG, "Status - Mode: %d, Power: %s", *currentMode, *isSystemOff ? "OFF" : "ON");
-                return true;
-            }
-        }
-        else if (input.indexOf("\"cmd\":\"set_brightness\"") != -1) {
-            int valIdx = input.indexOf("\"value\":");
-            if (valIdx != -1) {
-                int valStart = valIdx + 8;
-                int valEnd = input.indexOf(',', valStart);
-                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
-                if (valEnd == -1) valEnd = input.length();
 
-                int value = input.substring(valStart, valEnd).toInt();
-                value = constrain(value, 0, 255);
-                Effects::setBrightness(value);
-                Settings::saveBrightness(value);
-                ESP_LOGI(TAG, "Brightness set to: %d", value);
-                return true;
-            }
+        const char *cmd = doc["cmd"];
+        if (!cmd) {
+            ESP_LOGW(TAG, "ERROR: Missing 'cmd' field");
+            return false;
         }
-        else if (input.indexOf("\"cmd\":\"set_led_count\"") != -1) {
-            int valIdx = input.indexOf("\"value\":");
-            if (valIdx != -1) {
-                int valStart = valIdx + 8;
-                int valEnd = input.indexOf(',', valStart);
-                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
-                if (valEnd == -1) valEnd = input.length();
 
-                int value = input.substring(valStart, valEnd).toInt();
-                value = constrain(value, 1, 256);
-                Effects::setNumLeds(value);
-                Settings::saveNumLeds(value);
-                ESP_LOGI(TAG, "LED count set to: %d", value);
+        if (strcmp(cmd, "set_mode") == 0) {
+            if (!s_currentMode) return false;
+            int mode = doc["mode"] | -1;
+            if (mode >= 0 && mode < Effects::NUM_MODES) {
+                *s_currentMode = static_cast<Effects::Mode>(mode);
+                Settings::saveLightMode(mode);
+                ESP_LOGI(TAG, "Mode set to: %d", mode);
                 return true;
             }
+            ESP_LOGW(TAG, "Invalid mode value: %d", mode);
+            return false;
         }
-        else if (input.indexOf("\"cmd\":\"set_wifi\"") != -1) {
-            auto extractField = [&](const String& key) -> String {
-                int keyIdx = input.indexOf("\"" + key + "\":\"");
-                if (keyIdx == -1) return "";
-                int valStart = keyIdx + key.length() + 4;
-                int valEnd = input.indexOf("\"", valStart);
-                return (valEnd != -1) ? input.substring(valStart, valEnd) : "";
-            };
-            
-            String ssid = extractField("ssid");
-            String pass = extractField("pass");
-            
-            if (ssid.length() > 0) {
-                Settings::setWiFiCredentials(ssid, pass);
-                ESP_LOGI(TAG, "WiFi credentials saved - SSID: %s", ssid.c_str());
+
+        if (strcmp(cmd, "set_power") == 0) {
+            if (!s_isSystemOff) return false;
+            int state = doc["state"] | -1;
+            if (state == 0 || state == 1) {
+                *s_isSystemOff = (state == 0);
+                Settings::saveSystemState(*s_isSystemOff);
+                ESP_LOGI(TAG, "System power set to: %s", *s_isSystemOff ? "OFF" : "ON");
                 return true;
             }
+            ESP_LOGW(TAG, "Invalid state value: %d", state);
+            return false;
         }
-        
-        ESP_LOGW(TAG, "ERROR: Parsing failed or unknown command");
+
+        if (strcmp(cmd, "get_status") == 0) {
+            if (s_currentMode && s_isSystemOff) {
+                ESP_LOGI(TAG, "Status - Mode: %d, Power: %s", *s_currentMode, *s_isSystemOff ? "OFF" : "ON");
+                return true;
+            }
+            return false;
+        }
+
+        if (strcmp(cmd, "set_brightness") == 0) {
+            int value = doc["value"] | -1;
+            if (value < 0 || value > 255) {
+                ESP_LOGW(TAG, "Invalid brightness value: %d", value);
+                return false;
+            }
+            Effects::setBrightness(value);
+            Settings::saveBrightness(value);
+            ESP_LOGI(TAG, "Brightness set to: %d", value);
+            return true;
+        }
+
+        if (strcmp(cmd, "set_led_count") == 0) {
+            int value = doc["value"] | -1;
+            if (value < 1 || value > 256) {
+                ESP_LOGW(TAG, "Invalid LED count: %d", value);
+                return false;
+            }
+            Effects::setNumLeds(value);
+            Settings::saveNumLeds(value);
+            ESP_LOGI(TAG, "LED count set to: %d", value);
+            return true;
+        }
+
+        if (strcmp(cmd, "set_wifi") == 0) {
+            const char *ssid = doc["ssid"];
+            const char *pass = doc["pass"] | "";
+            if (ssid && strlen(ssid) > 0) {
+                Settings::setWiFiCredentials(String(ssid), String(pass));
+                ESP_LOGI(TAG, "WiFi credentials saved - SSID: %s", ssid);
+                return true;
+            }
+            ESP_LOGW(TAG, "Missing or empty SSID");
+            return false;
+        }
+
+        ESP_LOGW(TAG, "ERROR: Unknown command: %s", cmd);
         return false;
     }
 }

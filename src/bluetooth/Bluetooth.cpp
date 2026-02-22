@@ -25,6 +25,8 @@ static bool bleConnected = false;
 static bool bleStarted = false;
 static bool isInitialized = false;
 static BLEServer *bleServer = nullptr;
+static BLEService *serviceWorkTime = nullptr;
+static BLEService *serviceRegistration = nullptr;
 
 static BluetoothCredentialsReceivedCallback g_credentialsCallback = nullptr;
 static BluetoothConnectionStateCallback g_stateCallback = nullptr;
@@ -90,22 +92,26 @@ namespace Bluetooth {
             bleServer->setCallbacks(&serverCallbacks);
         }
 
-        // Registration service
-        BLEService *serviceRegistration = bleServer->createService(SERVICE_REGISTRATION_UUID);
-        characteristicRegistrationCredentials = serviceRegistration->createCharacteristic(
-            CHARACTERISTIC_REGISTRATION_CREDENTIALS_UUID,
-            BLECharacteristic::PROPERTY_WRITE);
-        characteristicRegistrationCredentials->setCallbacks(&characteristicCallbacks);
+        // Registration service — создаём только один раз
+        if (serviceRegistration == nullptr) {
+            serviceRegistration = bleServer->createService(SERVICE_REGISTRATION_UUID);
+            characteristicRegistrationCredentials = serviceRegistration->createCharacteristic(
+                CHARACTERISTIC_REGISTRATION_CREDENTIALS_UUID,
+                BLECharacteristic::PROPERTY_WRITE);
+            characteristicRegistrationCredentials->setCallbacks(&characteristicCallbacks);
 
-        characteristicRegistrationResponse = serviceRegistration->createCharacteristic(
-            CHARACTERISTIC_REGISTRATION_RESPONSE_UUID,
-            BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+            characteristicRegistrationResponse = serviceRegistration->createCharacteristic(
+                CHARACTERISTIC_REGISTRATION_RESPONSE_UUID,
+                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+        }
 
-        // Work time service
-        BLEService *serviceWorkTime = bleServer->createService(SERVICE_WORK_TIME_UUID);
-        characteristicWorkTime = serviceWorkTime->createCharacteristic(
-            CHARACTERISTIC_WORK_TIME_UUID,
-            BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+        // Work time service — создаём только один раз
+        if (serviceWorkTime == nullptr) {
+            serviceWorkTime = bleServer->createService(SERVICE_WORK_TIME_UUID);
+            characteristicWorkTime = serviceWorkTime->createCharacteristic(
+                CHARACTERISTIC_WORK_TIME_UUID,
+                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+        }
 
         serviceRegistration->start();
         serviceWorkTime->start();
@@ -162,7 +168,8 @@ namespace Bluetooth {
         // but this still won't fix the hanging problem and in most cases
         // it's enough to just stop broadcasting.
 
-        // 4. Nullify characteristic pointers to avoid Dangling Pointer
+        // 4. Сбрасываем указатели на характеристики; сами сервисы сохраняются
+        //    в serviceRegistration / serviceWorkTime для переиспользования при повторном enable().
         characteristicRegistrationCredentials = nullptr;
         characteristicRegistrationResponse = nullptr;
         characteristicWorkTime = nullptr;
@@ -181,7 +188,7 @@ namespace Bluetooth {
         if (success == true) disable();
     }
 
-    void sendWorkedTime(int seconds) {
+    void sendWorkedTime(uint32_t seconds) {
         if (bleConnected && characteristicWorkTime) {
             characteristicWorkTime->setValue(seconds);
             characteristicWorkTime->notify();

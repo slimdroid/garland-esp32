@@ -26,6 +26,8 @@ namespace SocketManager {
     void stop() {
         if (server) {
             server->stop();
+            delete server;
+            server = nullptr;
         }
         socketRunning = false;
         ESP_LOGI(TAG, "TCP Server stopped");
@@ -48,7 +50,7 @@ namespace SocketManager {
                 ESP_LOGD(TAG, "TCP Received: %s", data.c_str());
                 if (messageCallback != nullptr) {
                     if (messageCallback(data) == true) {
-                        currentClient.print("SUCCESS");
+                        currentClient.println("SUCCESS");
                     } else {
                         currentClient.println("FAILURE");
                     }

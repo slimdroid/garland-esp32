@@ -22,7 +22,6 @@ public:
           _lastBlinkTime(0),
           _blinkState(false) {
         FastLED.addLeds<WS2812, PIN, GRB>(_leds, 1).setCorrection(TypicalLEDStrip);
-        FastLED.setBrightness(50);
         _leds[0] = CRGB::Black;
         FastLED.show();
     }

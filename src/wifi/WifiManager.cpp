@@ -7,7 +7,7 @@ namespace WiFiManager {
 
     static String g_ssid;
     static String g_password;
-    static bool wifiConnectedOnce = false;
+    static bool hasCredentials = false;
     static unsigned long lastWiFiReconnectAttempt = 0;
     static unsigned long wifiReconnectInterval = 5000;
     static int failedReconnectAttempts = 0;
@@ -33,7 +33,7 @@ namespace WiFiManager {
         if (Settings::getWiFiCredentials(g_ssid, g_password)) {
             ESP_LOGI(TAG, "Stored credentials found, connecting...");
             WiFi.begin(g_ssid.c_str(), g_password.c_str());
-            wifiConnectedOnce = true;
+            hasCredentials = true;
         }
     }
 
@@ -45,13 +45,13 @@ namespace WiFiManager {
         WiFi.disconnect(true);
         delay(500);
         WiFi.begin(ssid.c_str(), password.c_str());
-        wifiConnectedOnce = true;
+        hasCredentials = true;
         failedReconnectAttempts = 0;
         wifiReconnectInterval = 5000;
     }
 
     void handleReconnect() {
-        if (wifiConnectedOnce && WiFi.status() != WL_CONNECTED) {
+        if (hasCredentials && WiFi.status() != WL_CONNECTED) {
             unsigned long currentMillis = millis();
             if (currentMillis - lastWiFiReconnectAttempt >= wifiReconnectInterval) {
                 lastWiFiReconnectAttempt = currentMillis;
