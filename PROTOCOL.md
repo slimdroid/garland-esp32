@@ -130,6 +130,56 @@ Sets credentials for connecting to a WiFi network.
 
 ---
 
+### 5. Set Brightness (set_brightness)
+
+Sets the brightness of the LED strip.
+
+**Format:**
+```json
+{"cmd":"set_brightness","value":<0-255>}
+```
+
+**Parameters:**
+- `value` (integer, required) - Brightness level from 0 (off) to 255 (maximum). Default: 51 (20% of maximum).
+
+**Examples:**
+```json
+{"cmd":"set_brightness","value":51}
+{"cmd":"set_brightness","value":128}
+{"cmd":"set_brightness","value":255}
+```
+
+**Result:**
+- Brightness is applied immediately and saved to non-volatile memory
+- Returns `true` on success, `false` on error
+
+---
+
+### 6. Set LED Count (set_led_count)
+
+Sets the number of LEDs in the strip.
+
+**Format:**
+```json
+{"cmd":"set_led_count","value":<1-256>}
+```
+
+**Parameters:**
+- `value` (integer, required) - Number of LEDs from 1 to 256. Default: 30.
+
+**Examples:**
+```json
+{"cmd":"set_led_count","value":30}
+{"cmd":"set_led_count","value":60}
+{"cmd":"set_led_count","value":144}
+```
+
+**Result:**
+- New LED count is applied immediately and saved to non-volatile memory
+- Returns `true` on success, `false` on error
+
+---
+
 ## Error Handling
 
 When an error occurs, the command returns `false` and outputs an error message to the log.

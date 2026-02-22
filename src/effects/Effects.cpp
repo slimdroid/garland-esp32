@@ -2,14 +2,22 @@
 #include "../board/BoardSelector.h"
 
 namespace Effects {
-    const int NUM_LEDS = 30; // Настройте количество светодиодов под вашу ленту
-    const int BRIGHTNESS = 51;  // 20% от 255
-
-    CRGB leds[NUM_LEDS];
+    int numLeds = 30;       // Количество светодиодов (по умолчанию)
+    int brightness = 51;    // Яркость: 20% от 255 (по умолчанию)
+    CRGB leds[256];         // Максимальный буфер для светодиодов
 
     void init() {
-        FastLED.addLeds<WS2812B, Pins::STRIP, GRB>(leds, NUM_LEDS);
-        FastLED.setBrightness(BRIGHTNESS);
+        FastLED.addLeds<WS2812B, Pins::STRIP, GRB>(leds, numLeds);
+        FastLED.setBrightness(brightness);
+    }
+    void setBrightness(int value) {
+        brightness = constrain(value, 0, 255);
+        FastLED.setBrightness(brightness);
+    }
+    void setNumLeds(int value) {
+        numLeds = constrain(value, 1, 256);
+        FastLED.clear();
+        FastLED.show();
     }
 
     void handle(Mode mode, bool isSystemOff) {
@@ -33,26 +41,26 @@ namespace Effects {
             }
             FastLED.show();
         } else {
-            fill_solid(leds, NUM_LEDS, CRGB::Black);
+            fill_solid(leds, numLeds, CRGB::Black);
             FastLED.show();
         }
     }
 
     void rainbow() {
         static uint8_t hue = 0;
-        fill_rainbow(leds, NUM_LEDS, hue++, 7);
+        fill_rainbow(leds, numLeds, hue++, 7);
     }
 
     void cylon() {
         static uint8_t i = 0;
         static bool forward = true;
         
-        fadeToBlackBy(leds, NUM_LEDS, 20);
+        fadeToBlackBy(leds, numLeds, 20);
         leds[i] = CHSV(millis() / 10, 255, 255);
         
         if (forward) {
             i++;
-            if (i >= NUM_LEDS - 1) forward = false;
+            if (i >= numLeds - 1) forward = false;
         } else {
             i--;
             if (i == 0) forward = true;
@@ -60,37 +68,37 @@ namespace Effects {
     }
 
     void sparkle() {
-        fadeToBlackBy(leds, NUM_LEDS, 10);
+        fadeToBlackBy(leds, numLeds, 10);
         if (random8() < 30) {
-            leds[random16(NUM_LEDS)] = CRGB::White;
+            leds[random16(numLeds)] = CRGB::White;
         }
     }
 
     void fire() {
         // Упрощенный эффект огня
-        for (int i = 0; i < NUM_LEDS; i++) {
+        for (int i = 0; i < numLeds; i++) {
             uint8_t noise = qsub8(inoise8(i * 60, millis() / 4), 16);
             leds[i] = CHSV(10 + (noise / 8), 255, noise);
         }
     }
 
     void confetti() {
-        fadeToBlackBy(leds, NUM_LEDS, 10);
-        int pos = random16(NUM_LEDS);
+        fadeToBlackBy(leds, numLeds, 10);
+        int pos = random16(numLeds);
         leds[pos] += CHSV(random8(255), 200, 255);
     }
 
     void sinelon() {
-        fadeToBlackBy(leds, NUM_LEDS, 20);
-        int pos = beatsin16(13, 0, NUM_LEDS - 1);
+        fadeToBlackBy(leds, numLeds, 20);
+        int pos = beatsin16(13, 0, numLeds - 1);
         leds[pos] += CHSV(millis() / 20, 255, 192);
     }
 
     void juggle() {
-        fadeToBlackBy(leds, NUM_LEDS, 20);
+        fadeToBlackBy(leds, numLeds, 20);
         uint8_t dothue = 0;
         for (int i = 0; i < 8; i++) {
-            leds[beatsin16(i + 7, 0, NUM_LEDS - 1)] |= CHSV(dothue, 200, 255);
+            leds[beatsin16(i + 7, 0, numLeds - 1)] |= CHSV(dothue, 200, 255);
             dothue += 32;
         }
     }
@@ -99,50 +107,50 @@ namespace Effects {
         uint8_t BeatsPerMinute = 62;
         CRGBPalette16 palette = PartyColors_p;
         uint8_t beat = beatsin8(BeatsPerMinute, 64, 255);
-        for (int i = 0; i < NUM_LEDS; i++) {
+        for (int i = 0; i < numLeds; i++) {
             leds[i] = ColorFromPalette(palette, (millis() / 10) + (i * 2), beat - (millis() / 10) + (i * 10));
         }
     }
 
     void snow() {
-        fadeToBlackBy(leds, NUM_LEDS, 20);
+        fadeToBlackBy(leds, numLeds, 20);
         if (random8() < 20) {
-            leds[random16(NUM_LEDS)] = CRGB::White;
+            leds[random16(numLeds)] = CRGB::White;
         }
     }
 
     void comet() {
         static uint16_t pos = 0;
-        fadeToBlackBy(leds, NUM_LEDS, 40);
-        leds[pos % NUM_LEDS] = CHSV(millis() / 10, 255, 255);
+        fadeToBlackBy(leds, numLeds, 40);
+        leds[pos % numLeds] = CHSV(millis() / 10, 255, 255);
         pos++;
     }
 
     void rainbow_glitter() {
         rainbow();
         if (random8() < 80) {
-            leds[random16(NUM_LEDS)] += CRGB::White;
+            leds[random16(numLeds)] += CRGB::White;
         }
     }
 
     void color_waves() {
         uint8_t hue = millis() / 50;
-        for (int i = 0; i < NUM_LEDS; i++) {
-            int colorIndex = (hue + (i * 255 / NUM_LEDS)) % 255;
+        for (int i = 0; i < numLeds; i++) {
+            int colorIndex = (hue + (i * 255 / numLeds)) % 255;
             leds[i] = CHSV(colorIndex, 255, beatsin8(10, 160, 255, 0, i * 10));
         }
     }
 
     void theater_chase() {
         static uint8_t frame = 0;
-        fadeToBlackBy(leds, NUM_LEDS, 100);
-        for (int i = frame; i < NUM_LEDS; i += 3) {
+        fadeToBlackBy(leds, numLeds, 100);
+        for (int i = frame; i < numLeds; i += 3) {
             leds[i] = CHSV(millis() / 20, 255, 255);
         }
         frame = (frame + 1) % 3;
     }
 
     void solid_glow() {
-        fill_solid(leds, NUM_LEDS, CHSV(millis() / 50, 255, beatsin8(15, 100, 255)));
+        fill_solid(leds, numLeds, CHSV(millis() / 50, 255, beatsin8(15, 100, 255)));
     }
 }

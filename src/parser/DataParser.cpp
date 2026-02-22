@@ -16,7 +16,7 @@ namespace DataParser {
         ESP_LOGD(TAG, "DATA: %s ", input.c_str());
 
         // Simple parsing for JSON-like format
-        // Supports: set_mode, set_power, get_status, set_wifi
+        // Supports: set_mode, set_power, get_status, set_wifi, set_brightness, set_led_count
         
         if (input.indexOf("\"cmd\":\"set_mode\"") != -1) {
             int modeIdx = input.indexOf("\"mode\":");
@@ -57,6 +57,38 @@ namespace DataParser {
         else if (input.indexOf("\"cmd\":\"get_status\"") != -1) {
             if (currentMode && isSystemOff) {
                 ESP_LOGI(TAG, "Status - Mode: %d, Power: %s", *currentMode, *isSystemOff ? "OFF" : "ON");
+                return true;
+            }
+        }
+        else if (input.indexOf("\"cmd\":\"set_brightness\"") != -1) {
+            int valIdx = input.indexOf("\"value\":");
+            if (valIdx != -1) {
+                int valStart = valIdx + 8;
+                int valEnd = input.indexOf(',', valStart);
+                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
+                if (valEnd == -1) valEnd = input.length();
+
+                int value = input.substring(valStart, valEnd).toInt();
+                value = constrain(value, 0, 255);
+                Effects::setBrightness(value);
+                Settings::saveBrightness(value);
+                ESP_LOGI(TAG, "Brightness set to: %d", value);
+                return true;
+            }
+        }
+        else if (input.indexOf("\"cmd\":\"set_led_count\"") != -1) {
+            int valIdx = input.indexOf("\"value\":");
+            if (valIdx != -1) {
+                int valStart = valIdx + 8;
+                int valEnd = input.indexOf(',', valStart);
+                if (valEnd == -1) valEnd = input.indexOf('}', valStart);
+                if (valEnd == -1) valEnd = input.length();
+
+                int value = input.substring(valStart, valEnd).toInt();
+                value = constrain(value, 1, 256);
+                Effects::setNumLeds(value);
+                Settings::saveNumLeds(value);
+                ESP_LOGI(TAG, "LED count set to: %d", value);
                 return true;
             }
         }

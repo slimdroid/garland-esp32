@@ -77,10 +77,15 @@ void setup() {
 
     // Restore settings
     int savedMode;
-    Settings::loadLightSettings(savedMode, isSystemOff);
+    int savedBrightness;
+    int savedNumLeds;
+    Settings::loadLightSettings(savedMode, isSystemOff, savedBrightness, savedNumLeds);
     currentMode = static_cast<Effects::Mode>(savedMode);
-    ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
+    Effects::setBrightness(savedBrightness);
+    Effects::setNumLeds(savedNumLeds);
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
+    ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
+    ESP_LOGI(TAG, "Brightness: %d, LED count: %d", savedBrightness, savedNumLeds);
 
     WiFiManager::init(onWifiStatusChanged);
 

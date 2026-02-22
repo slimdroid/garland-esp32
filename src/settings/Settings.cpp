@@ -12,6 +12,10 @@
 #define KEY_MODE_DEF 0
 #define KEY_OFF "systemOff"
 #define KEY_OFF_DEF false
+#define KEY_BRIGHTNESS "brightness"
+#define KEY_BRIGHTNESS_DEF 51
+#define KEY_NUM_LEDS "numLeds"
+#define KEY_NUM_LEDS_DEF 30
 
 #define DEBOUNCE_MS 5000
 
@@ -73,12 +77,26 @@ namespace Settings {
         }
     }
 
-    void loadLightSettings(int &mode, bool &isOff) {
+    void saveBrightness(const int brightness) {
+        preferences.begin(PREF_LIGHT, false);
+        preferences.putInt(KEY_BRIGHTNESS, brightness);
+        preferences.end();
+        ESP_LOGD(TAG, "saveBrightness: brightness=%d", brightness);
+    }
+    void saveNumLeds(const int numLeds) {
+        preferences.begin(PREF_LIGHT, false);
+        preferences.putInt(KEY_NUM_LEDS, numLeds);
+        preferences.end();
+        ESP_LOGD(TAG, "saveNumLeds: numLeds=%d", numLeds);
+    }
+    void loadLightSettings(int &mode, bool &isOff, int &brightness, int &numLeds) {
         preferences.begin(PREF_LIGHT, true);
         mode = preferences.getInt(KEY_MODE, KEY_MODE_DEF);
         isOff = preferences.getBool(KEY_OFF, KEY_OFF_DEF);
+        brightness = preferences.getInt(KEY_BRIGHTNESS, KEY_BRIGHTNESS_DEF);
+        numLeds = preferences.getInt(KEY_NUM_LEDS, KEY_NUM_LEDS_DEF);
         preferences.end();
-        ESP_LOGI(TAG, "loadLightSettings: mode=%d, isOff=%d", mode, isOff);
+        ESP_LOGI(TAG, "loadLightSettings: mode=%d, isOff=%d, brightness=%d, numLeds=%d", mode, isOff, brightness, numLeds);
     }
 
     void handleSettingsSync() {

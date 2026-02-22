@@ -3,7 +3,8 @@
 #include <FastLED.h>
 
 namespace Effects {
-    extern const int NUM_LEDS;
+    extern int numLeds;
+    extern int brightness;
     extern CRGB leds[];
 
     enum Mode {
@@ -26,6 +27,8 @@ namespace Effects {
 
     void init();
     void handle(Mode mode, bool isSystemOff);
+    void setBrightness(int value);
+    void setNumLeds(int value);
 
     void rainbow();
     void cylon();

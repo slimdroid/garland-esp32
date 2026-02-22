@@ -32,11 +32,23 @@ namespace Settings {
     void saveSystemState(bool isOff);
 
     /**
+     * @brief Saves the brightness level
+     * @param brightness Brightness value (0–255)
+     */
+    void saveBrightness(int brightness);
+    /**
+     * @brief Saves the number of LEDs
+     * @param numLeds Number of LEDs
+     */
+    void saveNumLeds(int numLeds);
+    /**
      * @brief Loads lighting settings from persistent storage
      * @param mode Output for light mode ID
      * @param isOff Output for device on/off state
+     * @param brightness Output for brightness value (0–255)
+     * @param numLeds Output for number of LEDs
      */
-    void loadLightSettings(int &mode, bool &isOff);
+    void loadLightSettings(int &mode, bool &isOff, int &brightness, int &numLeds);
 
     /**
      * @brief Handles settings synchronization (e.g., commit changes to storage)
