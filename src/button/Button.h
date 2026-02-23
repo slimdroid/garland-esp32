@@ -21,12 +21,6 @@ public:
     explicit Button(uint8_t pin);
 
     /**
-     * @brief Set external flag: if false, MEDIUM_PRESS will be fired after MEDIUM_PRESS_MS hold without waiting for release
-     * @param isSystemOff pointer to external boolean flag
-     */
-    void setSystemState(const bool *isSystemOff);
-
-    /**
      * @brief Periodic handler to process button state and detect actions
      * @return The detected ButtonAction
      */
@@ -38,10 +32,8 @@ private:
     bool _lastState;
     bool _isPressed;
     bool _longPressSent;
-    bool _shortPressSent;
     unsigned long _lastDebounceTime;
     unsigned long _pressStartTime;
-    const bool *_isSystemOff;
 
     static constexpr unsigned long DEBOUNCE_MS = 50;
     static constexpr unsigned long MEDIUM_PRESS_MS = 1000;

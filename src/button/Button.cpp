@@ -7,15 +7,9 @@ Button::Button(const uint8_t pin)
       _lastState(HIGH),
       _isPressed(false),
       _longPressSent(false),
-      _shortPressSent(false),
       _lastDebounceTime(0),
-      _pressStartTime(0),
-      _isSystemOff(nullptr) {
+      _pressStartTime(0) {
     pinMode(pin, INPUT_PULLUP);
-}
-
-void Button::setSystemState(const bool *isSystemOff) {
-    _isSystemOff = isSystemOff;
 }
 
 ButtonAction Button::handle() {
@@ -37,23 +31,13 @@ ButtonAction Button::handle() {
             if (_isPressed) {
                 _pressStartTime = now;
                 _longPressSent = false;
-                _shortPressSent = false;
             } else {
-                if (!_shortPressSent) {
-                    const unsigned long duration = now - _pressStartTime;
-                    if (duration < MEDIUM_PRESS_MS) {
-                        action = SHORT_PRESS;
-                    } else if (duration < LONG_PRESS_MS) {
-                        action = MEDIUM_PRESS;
-                    }
+                const unsigned long duration = now - _pressStartTime;
+                if (duration < MEDIUM_PRESS_MS) {
+                    action = SHORT_PRESS;
+                } else if (duration < LONG_PRESS_MS) {
+                    action = MEDIUM_PRESS;
                 }
-            }
-        }
-
-        if (_isPressed && !_shortPressSent && _isSystemOff && !*_isSystemOff) {
-            if ((now - _pressStartTime) >= MEDIUM_PRESS_MS) {
-                _shortPressSent = true;
-                action = MEDIUM_PRESS;
             }
         }
 
