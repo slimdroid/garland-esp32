@@ -2,15 +2,16 @@
 
 ## Description
 
-The protocol is designed to control an ESP32 device with an RGB LED through external interfaces (WebSocket, UDP).
+The protocol is designed to control an ESP32 device with an RGB LED strip through external interfaces (WebSocket, UDP, Bluetooth).
 
-Data format: JSON-like structure with commands and parameters.
+Data format: JSON structure with commands and parameters.
 
 ## Transport Protocols
 
 The protocol works over the following transports:
 - **WebSocket** - for persistent connection
 - **UDP** - for fast commands without connection establishment
+- **Bluetooth** - for wireless control without WiFi
 
 ## Command Format
 
@@ -23,30 +24,39 @@ All commands are transmitted in JSON format:
 
 ### 1. Set LED Mode (set_mode)
 
-Sets the operating mode of the RGB LED.
+Sets the operating mode (effect) of the RGB LED strip.
 
 **Format:**
 ```json
-{"cmd":"set_mode","mode":<0-4>}
+{"cmd":"set_mode","mode":<0-13>}
 ```
 
 **Parameters:**
 - `mode` (integer, required) - mode number:
-  - `0` - FADE (smooth color transitions)
-  - `1` - RED (red)
-  - `2` - GREEN (green)
-  - `3` - BLUE (blue)
-  - `4` - WHITE (white)
+  - `0` - RAINBOW (rainbow)
+  - `1` - CYLON (cylon scanner)
+  - `2` - SPARKLE (sparkle)
+  - `3` - FIRE (fire)
+  - `4` - CONFETTI (confetti)
+  - `5` - SINELON (sinelon)
+  - `6` - JUGGLE (juggle)
+  - `7` - BPM (bpm)
+  - `8` - SNOW (snow)
+  - `9` - COMET (comet)
+  - `10` - RAINBOW_GLITTER (rainbow with glitter)
+  - `11` - COLOR_WAVES (color waves)
+  - `12` - THEATER_CHASE (theater chase)
+  - `13` - SOLID_GLOW (solid glow)
 
 **Examples:**
 ```json
 {"cmd":"set_mode","mode":0}
-{"cmd":"set_mode","mode":2}
-{"cmd":"set_mode","mode":4}
+{"cmd":"set_mode","mode":3}
+{"cmd":"set_mode","mode":13}
 ```
 
 **Result:**
-- LED mode changes immediately
+- LED effect changes immediately
 - New mode is saved to non-volatile memory
 - Returns `true` on success, `false` on error
 
@@ -100,7 +110,7 @@ No parameters.
 **Result:**
 - Information about current mode and power state is output to log
 - Returns `true` on success
-- Response format (in logs): `Status - Mode: <0-4>, Power: <ON|OFF>`
+- Response format (in logs): `Status - Mode: <0-13>, Power: <ON|OFF>`
 
 ---
 
@@ -115,7 +125,7 @@ Sets credentials for connecting to a WiFi network.
 
 **Parameters:**
 - `ssid` (string, required) - WiFi network name
-- `pass` (string, required) - WiFi network password
+- `pass` (string, optional) - WiFi network password (default: empty string)
 
 **Examples:**
 ```json
@@ -186,26 +196,27 @@ When an error occurs, the command returns `false` and outputs an error message t
 
 **Error Types:**
 
-1. **Missing 'cmd' field:**
+1. **JSON parse error:**
    ```
-   ERROR: No 'cmd' field found
-   ```
-
-2. **Invalid command format:**
-   ```
-   ERROR: Invalid command format
+   JSON parse error: <description>
    ```
 
-3. **Missing required parameter:**
+2. **Missing 'cmd' field:**
    ```
-   ERROR: No 'mode' parameter
-   ERROR: No 'state' parameter
-   ERROR: Missing 'ssid' or 'pass' parameter
+   ERROR: Missing 'cmd' field
    ```
 
-4. **Invalid parameter value:**
+3. **Invalid parameter value:**
    ```
-   ERROR: Invalid mode value: <value>
+   Invalid mode value: <value>
+   Invalid state value: <value>
+   Invalid brightness value: <value>
+   Invalid LED count: <value>
+   ```
+
+4. **Missing required parameter:**
+   ```
+   Missing or empty SSID
    ```
 
 5. **Unknown command:**
@@ -213,26 +224,19 @@ When an error occurs, the command returns `false` and outputs an error message t
    ERROR: Unknown command: <command_name>
    ```
 
-6. **Internal error:**
-   ```
-   ERROR: currentMode pointer is null
-   ERROR: isSystemOff pointer is null
-   ERROR: State pointers are null
-   ```
-
 ---
 
 ## Usage Examples
 
-### Example 1: Turn on red color
+### Example 1: Turn on rainbow effect
 ```json
 {"cmd":"set_power","state":1}
-{"cmd":"set_mode","mode":1}
+{"cmd":"set_mode","mode":0}
 ```
 
-### Example 2: Switch to smooth color transition mode
+### Example 2: Switch to fire effect
 ```json
-{"cmd":"set_mode","mode":0}
+{"cmd":"set_mode","mode":3}
 ```
 
 ### Example 3: Turn off the system
@@ -240,15 +244,25 @@ When an error occurs, the command returns `false` and outputs an error message t
 {"cmd":"set_power","state":0}
 ```
 
-### Example 4: Configure WiFi and turn on green color
+### Example 4: Configure WiFi and enable snow effect
 ```json
 {"cmd":"set_wifi","ssid":"MyHomeNetwork","pass":"password123"}
-{"cmd":"set_mode","mode":2}
+{"cmd":"set_mode","mode":8}
 ```
 
 ### Example 5: Check status
 ```json
 {"cmd":"get_status"}
+```
+
+### Example 6: Set brightness to 50%
+```json
+{"cmd":"set_brightness","value":128}
+```
+
+### Example 7: Configure 60-LED strip
+```json
+{"cmd":"set_led_count","value":60}
 ```
 
 ---
@@ -260,8 +274,8 @@ When an error occurs, the command returns `false` and outputs an error message t
 const ws = new WebSocket('ws://<device_ip>:<port>');
 
 ws.onopen = () => {
-    // Set blue color
-    ws.send('{"cmd":"set_mode","mode":3}');
+    // Set rainbow effect
+    ws.send('{"cmd":"set_mode","mode":0}');
     
     // Request status
     ws.send('{"cmd":"get_status"}');
@@ -279,13 +293,13 @@ device_port = <port>
 # Turn on system
 sock.sendto(b'{"cmd":"set_power","state":1}', (device_ip, device_port))
 
-# Set white color
-sock.sendto(b'{"cmd":"set_mode","mode":4}', (device_ip, device_port))
+# Set fire effect
+sock.sendto(b'{"cmd":"set_mode","mode":3}', (device_ip, device_port))
 ```
 
 ### Via UDP (netcat)
 ```bash
-# Set FADE mode
+# Set RAINBOW mode
 echo '{"cmd":"set_mode","mode":0}' | nc -u <device_ip> <port>
 
 # Turn off system
@@ -298,8 +312,10 @@ echo '{"cmd":"set_power","state":0}' | nc -u <device_ip> <port>
 
 All commands that change device state automatically save settings to non-volatile memory (NVS):
 
-- `set_mode` - saves current LED mode
+- `set_mode` - saves current LED effect mode
 - `set_power` - saves system power state
+- `set_brightness` - saves brightness level
+- `set_led_count` - saves number of LEDs
 - `set_wifi` - saves WiFi credentials
 
 When the device reboots, all settings are restored automatically.
@@ -310,8 +326,8 @@ When the device reboots, all settings are restored automatically.
 
 - **Encoding:** UTF-8
 - **Maximum command length:** limited by String buffer size in Arduino (typically ~1KB)
-- **Parsing:** simple string-based parser without external libraries
-- **Logging:** all commands and errors are logged through the Logging module
+- **Parsing:** ArduinoJson library
+- **Logging:** all commands and errors are logged through the ESP logging module
 - **Thread safety:** commands are processed in the main loop()
 
 ---
@@ -320,21 +336,16 @@ When the device reboots, all settings are restored automatically.
 
 To add a new command:
 
-1. Add handling to the `DataParser::parse()` function in `src/DataParser.cpp`
+1. Add handling to the `DataParser::parse()` function in `src/parser/DataParser.cpp`
 2. Use the existing command parsing pattern
 3. Add logging for debugging
 4. Update this documentation
 
 Example of adding a new command:
 ```cpp
-else if (command == "new_command") {
-    // Extract parameters
-    int paramStart = data.indexOf("\"param\"");
-    // ... parse parameters ...
-    
-    // Execute action
-    // ... your code ...
-    
+if (strcmp(cmd, "new_command") == 0) {
+    int param = doc["param"] | -1;
+    // ... validate and execute ...
     ESP_LOGI(TAG, "New command executed");
     return true;
 }

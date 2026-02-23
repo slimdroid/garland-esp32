@@ -16,50 +16,95 @@
 
 ## Switching LED Modes
 
-### Mode 0: FADE (smooth color transitions)
+### Mode 0: RAINBOW (rainbow)
 ```json
 {"cmd":"set_mode","mode":0}
 ```
 
-### Mode 1: RED (red)
+### Mode 1: CYLON (cylon scanner)
 ```json
 {"cmd":"set_mode","mode":1}
 ```
 
-### Mode 2: GREEN (green)
+### Mode 2: SPARKLE (sparkle)
 ```json
 {"cmd":"set_mode","mode":2}
 ```
 
-### Mode 3: BLUE (blue)
+### Mode 3: FIRE (fire)
 ```json
 {"cmd":"set_mode","mode":3}
 ```
 
-### Mode 4: WHITE (white)
+### Mode 4: CONFETTI (confetti)
 ```json
 {"cmd":"set_mode","mode":4}
+```
+
+### Mode 5: SINELON (sinelon)
+```json
+{"cmd":"set_mode","mode":5}
+```
+
+### Mode 6: JUGGLE (juggle)
+```json
+{"cmd":"set_mode","mode":6}
+```
+
+### Mode 7: BPM (bpm)
+```json
+{"cmd":"set_mode","mode":7}
+```
+
+### Mode 8: SNOW (snow)
+```json
+{"cmd":"set_mode","mode":8}
+```
+
+### Mode 9: COMET (comet)
+```json
+{"cmd":"set_mode","mode":9}
+```
+
+### Mode 10: RAINBOW_GLITTER (rainbow with glitter)
+```json
+{"cmd":"set_mode","mode":10}
+```
+
+### Mode 11: COLOR_WAVES (color waves)
+```json
+{"cmd":"set_mode","mode":11}
+```
+
+### Mode 12: THEATER_CHASE (theater chase)
+```json
+{"cmd":"set_mode","mode":12}
+```
+
+### Mode 13: SOLID_GLOW (solid glow)
+```json
+{"cmd":"set_mode","mode":13}
 ```
 
 ---
 
 ## Typical Usage Scenarios
 
-### Scenario 1: Turn on LED in red mode
-```json
-{"cmd":"set_power","state":1}
-{"cmd":"set_mode","mode":1}
-```
-
-### Scenario 2: Switch to green color
-```json
-{"cmd":"set_mode","mode":2}
-```
-
-### Scenario 3: Enable smooth color transition mode
+### Scenario 1: Turn on LED in rainbow mode
 ```json
 {"cmd":"set_power","state":1}
 {"cmd":"set_mode","mode":0}
+```
+
+### Scenario 2: Switch to fire effect
+```json
+{"cmd":"set_mode","mode":3}
+```
+
+### Scenario 3: Enable snow effect
+```json
+{"cmd":"set_power","state":1}
+{"cmd":"set_mode","mode":8}
 ```
 
 ### Scenario 4: Turn off LED
@@ -67,10 +112,56 @@
 {"cmd":"set_power","state":0}
 ```
 
-### Scenario 5: Turn on white light
+### Scenario 5: Solid glow at full brightness
 ```json
 {"cmd":"set_power","state":1}
-{"cmd":"set_mode","mode":4}
+{"cmd":"set_mode","mode":13}
+{"cmd":"set_brightness","value":255}
+```
+
+### Scenario 6: Configure strip and set effect
+```json
+{"cmd":"set_led_count","value":60}
+{"cmd":"set_brightness","value":128}
+{"cmd":"set_mode","mode":0}
+```
+
+---
+
+## Setting Brightness
+
+### Set brightness to 20% (default)
+```json
+{"cmd":"set_brightness","value":51}
+```
+
+### Set brightness to 50%
+```json
+{"cmd":"set_brightness","value":128}
+```
+
+### Set maximum brightness
+```json
+{"cmd":"set_brightness","value":255}
+```
+
+---
+
+## Configuring LED Count
+
+### Set 30 LEDs (default)
+```json
+{"cmd":"set_led_count","value":30}
+```
+
+### Set 60 LEDs
+```json
+{"cmd":"set_led_count","value":60}
+```
+
+### Set 144 LEDs
+```json
+{"cmd":"set_led_count","value":144}
 ```
 
 ---
@@ -89,8 +180,8 @@ ws.onopen = () => {
     // Turn on LED
     ws.send('{"cmd":"set_power","state":1}');
     
-    // Set red color
-    ws.send('{"cmd":"set_mode","mode":1}');
+    // Set rainbow effect
+    ws.send('{"cmd":"set_mode","mode":0}');
 };
 
 ws.onmessage = (event) => {
@@ -110,14 +201,33 @@ function setMode(mode) {
     ws.send(`{"cmd":"set_mode","mode":${mode}}`);
 }
 
+function setBrightness(value) {
+    ws.send(`{"cmd":"set_brightness","value":${value}}`);
+}
+
+function setLedCount(value) {
+    ws.send(`{"cmd":"set_led_count","value":${value}}`);
+}
+
 // Usage examples:
-// turnOn();           // Turn on
-// setMode(1);         // Red
-// setMode(2);         // Green
-// setMode(3);         // Blue
-// setMode(4);         // White
-// setMode(0);         // Smooth transition
-// turnOff();          // Turn off
+// turnOn();              // Turn on
+// setMode(0);            // Rainbow
+// setMode(1);            // Cylon
+// setMode(2);            // Sparkle
+// setMode(3);            // Fire
+// setMode(4);            // Confetti
+// setMode(5);            // Sinelon
+// setMode(6);            // Juggle
+// setMode(7);            // BPM
+// setMode(8);            // Snow
+// setMode(9);            // Comet
+// setMode(10);           // Rainbow with glitter
+// setMode(11);           // Color waves
+// setMode(12);           // Theater chase
+// setMode(13);           // Solid glow
+// setBrightness(128);    // 50% brightness
+// setLedCount(60);       // 60 LEDs
+// turnOff();             // Turn off
 ```
 
 ### Via UDP (Python)
@@ -136,29 +246,33 @@ def send_command(cmd):
     sock.sendto(cmd.encode(), (DEVICE_IP, DEVICE_PORT))
     print(f'Sent: {cmd}')
 
+# Configure strip
+send_command('{"cmd":"set_led_count","value":60}')
+time.sleep(0.1)
+
+# Set brightness to 50%
+send_command('{"cmd":"set_brightness","value":128}')
+time.sleep(0.1)
+
 # Turn on LED
 send_command('{"cmd":"set_power","state":1}')
 time.sleep(0.1)
 
-# Set red color
-send_command('{"cmd":"set_mode","mode":1}')
+# Cycle through effects
+send_command('{"cmd":"set_mode","mode":0}')   # Rainbow
 time.sleep(2)
 
-# Switch to green
-send_command('{"cmd":"set_mode","mode":2}')
+send_command('{"cmd":"set_mode","mode":3}')   # Fire
 time.sleep(2)
 
-# Switch to blue
-send_command('{"cmd":"set_mode","mode":3}')
+send_command('{"cmd":"set_mode","mode":8}')   # Snow
 time.sleep(2)
 
-# Switch to white
-send_command('{"cmd":"set_mode","mode":4}')
+send_command('{"cmd":"set_mode","mode":9}')   # Comet
 time.sleep(2)
 
-# Smooth color transition mode
-send_command('{"cmd":"set_mode","mode":0}')
-time.sleep(5)
+send_command('{"cmd":"set_mode","mode":13}')  # Solid glow
+time.sleep(2)
 
 # Turn off LED
 send_command('{"cmd":"set_power","state":0}')
@@ -176,20 +290,26 @@ PORT="3333"
 # Turn on LED
 echo '{"cmd":"set_power","state":1}' | nc -u $DEVICE_IP $PORT
 
-# Set red color
-echo '{"cmd":"set_mode","mode":1}' | nc -u $DEVICE_IP $PORT
+# Set rainbow effect
+echo '{"cmd":"set_mode","mode":0}' | nc -u $DEVICE_IP $PORT
 
-# Set green color
-echo '{"cmd":"set_mode","mode":2}' | nc -u $DEVICE_IP $PORT
-
-# Set blue color
+# Set fire effect
 echo '{"cmd":"set_mode","mode":3}' | nc -u $DEVICE_IP $PORT
 
-# Set white color
-echo '{"cmd":"set_mode","mode":4}' | nc -u $DEVICE_IP $PORT
+# Set snow effect
+echo '{"cmd":"set_mode","mode":8}' | nc -u $DEVICE_IP $PORT
 
-# Smooth color transition mode
-echo '{"cmd":"set_mode","mode":0}' | nc -u $DEVICE_IP $PORT
+# Set comet effect
+echo '{"cmd":"set_mode","mode":9}' | nc -u $DEVICE_IP $PORT
+
+# Set solid glow
+echo '{"cmd":"set_mode","mode":13}' | nc -u $DEVICE_IP $PORT
+
+# Set brightness to 50%
+echo '{"cmd":"set_brightness","value":128}' | nc -u $DEVICE_IP $PORT
+
+# Set 60 LEDs
+echo '{"cmd":"set_led_count","value":60}' | nc -u $DEVICE_IP $PORT
 
 # Turn off LED
 echo '{"cmd":"set_power","state":0}' | nc -u $DEVICE_IP $PORT
@@ -210,20 +330,28 @@ function Send-Command($cmd) {
     Write-Host "Sent: $cmd"
 }
 
+# Configure strip
+Send-Command '{"cmd":"set_led_count","value":60}'
+Start-Sleep -Milliseconds 100
+
+# Set brightness
+Send-Command '{"cmd":"set_brightness","value":128}'
+Start-Sleep -Milliseconds 100
+
 # Turn on LED
 Send-Command '{"cmd":"set_power","state":1}'
 Start-Sleep -Milliseconds 100
 
-# Set red color
-Send-Command '{"cmd":"set_mode","mode":1}'
+# Set rainbow effect
+Send-Command '{"cmd":"set_mode","mode":0}'
 Start-Sleep -Seconds 2
 
-# Switch to green
-Send-Command '{"cmd":"set_mode","mode":2}'
-Start-Sleep -Seconds 2
-
-# Switch to blue
+# Switch to fire
 Send-Command '{"cmd":"set_mode","mode":3}'
+Start-Sleep -Seconds 2
+
+# Switch to snow
+Send-Command '{"cmd":"set_mode","mode":8}'
 Start-Sleep -Seconds 2
 
 # Turn off
@@ -240,12 +368,24 @@ $udpClient.Close()
 |--------|---------|
 | Turn on | `{"cmd":"set_power","state":1}` |
 | Turn off | `{"cmd":"set_power","state":0}` |
-| Smooth color transition | `{"cmd":"set_mode","mode":0}` |
-| Red | `{"cmd":"set_mode","mode":1}` |
-| Green | `{"cmd":"set_mode","mode":2}` |
-| Blue | `{"cmd":"set_mode","mode":3}` |
-| White | `{"cmd":"set_mode","mode":4}` |
 | Get status | `{"cmd":"get_status"}` |
+| RAINBOW | `{"cmd":"set_mode","mode":0}` |
+| CYLON | `{"cmd":"set_mode","mode":1}` |
+| SPARKLE | `{"cmd":"set_mode","mode":2}` |
+| FIRE | `{"cmd":"set_mode","mode":3}` |
+| CONFETTI | `{"cmd":"set_mode","mode":4}` |
+| SINELON | `{"cmd":"set_mode","mode":5}` |
+| JUGGLE | `{"cmd":"set_mode","mode":6}` |
+| BPM | `{"cmd":"set_mode","mode":7}` |
+| SNOW | `{"cmd":"set_mode","mode":8}` |
+| COMET | `{"cmd":"set_mode","mode":9}` |
+| RAINBOW_GLITTER | `{"cmd":"set_mode","mode":10}` |
+| COLOR_WAVES | `{"cmd":"set_mode","mode":11}` |
+| THEATER_CHASE | `{"cmd":"set_mode","mode":12}` |
+| SOLID_GLOW | `{"cmd":"set_mode","mode":13}` |
+| Set brightness (0-255) | `{"cmd":"set_brightness","value":128}` |
+| Set LED count (1-256) | `{"cmd":"set_led_count","value":60}` |
+| Configure WiFi | `{"cmd":"set_wifi","ssid":"Name","pass":"pass"}` |
 
 ---
 
@@ -263,3 +403,9 @@ $udpClient.Close()
    - Check the settings in your device code
 
 5. **Delays**: When sending multiple commands in succession, it's recommended to add small pauses (100-200 ms) between commands.
+
+6. **Mode range**: Valid mode values are `0` to `13` (13 effects total).
+
+7. **Brightness**: Values range from `0` (off) to `255` (maximum). Default is `51` (~20%).
+
+8. **LED count**: Valid range is `1` to `256`. Default is `30`.
