@@ -15,12 +15,14 @@ namespace WiFiManager {
 
     static void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
         ESP_LOGI(TAG, "WiFi connected, IP: %s", WiFi.localIP().toString().c_str());
-        if (statusCallback) statusCallback(true, WiFi.localIP().toString());
+        String response = "{\"status\":\"Success\",\"ip\":\"" + WiFi.localIP().toString() + "\"}";
+        if (statusCallback) statusCallback(true, response);
     }
 
     static void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
         ESP_LOGW(TAG, "Disconnected from WiFi. Reason: %d", info.wifi_sta_disconnected.reason);
-        if (statusCallback) statusCallback(false, "Disconnected");
+        String response = "{\"status\":\"Failure\"}";
+        if (statusCallback) statusCallback(false, response);
     }
 
     void init(WifiStatusCallback callback) {
