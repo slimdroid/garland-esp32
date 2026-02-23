@@ -15,7 +15,7 @@
 #define KEY_BRIGHTNESS "brightness"
 #define KEY_BRIGHTNESS_DEF 51
 #define KEY_NUM_LEDS "numLeds"
-#define KEY_NUM_LEDS_DEF 30
+#define KEY_NUM_LEDS_DEF 60
 
 #define DEBOUNCE_MS 5000
 

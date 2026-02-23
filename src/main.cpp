@@ -66,19 +66,19 @@ void onBleStateChanged(BT_ConnectionState state) {
 void setup() {
     Serial.begin(115200);
 
-    // Switcher and FastLED initializing
-    Switcher::init();
-
     // Restore settings
     int savedMode;
     int savedBrightness;
     int savedNumLeds;
     Settings::loadLightSettings(savedMode, isSystemOff, savedBrightness, savedNumLeds);
+
     currentMode = static_cast<Effects::Mode>(savedMode);
+
+    // Switcher and FastLED initializing
+    Switcher::init(savedNumLeds);
     Switcher::setMode(currentMode);
     Switcher::setSystemOff(isSystemOff);
     Switcher::setBrightness(savedBrightness);
-    Switcher::setNumLeds(savedNumLeds);
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
     ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
     ESP_LOGI(TAG, "Brightness: %d, LED count: %d", savedBrightness, savedNumLeds);

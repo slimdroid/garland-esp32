@@ -4,20 +4,23 @@
 #include "../effects/Effects.h"
 
 namespace Switcher {
-    int numLeds = 30;       // Number of LEDs (default)
-    int brightness = 51;    // Brightness: 20% of 255 (default)
-    CRGB leds[256];         // Maximum buffer for LEDs
-
+    static int volatile numLeds = 30;       // Number of LEDs (default)
+    static int volatile brightness = 51;    // Brightness: 20% of 255 (default)
+    static CRGB leds[256];                  // Maximum buffer for LEDs
     static Effects::Mode volatile g_mode = Effects::RAINBOW;
     static bool volatile g_isSystemOff = false;
     static bool volatile g_settingsChanged = false;
+    static bool volatile g_numLedsChanged = false;
     static bool g_useTask = false;
 
     void handle_internal() {
         if (g_settingsChanged) {
             FastLED.setBrightness(brightness);
-            FastLED[0].setLeds(leds, numLeds);
-            FastLED.clear();
+            if (g_numLedsChanged) {
+                FastLED[0].setLeds(leds, numLeds);
+                FastLED.clear();
+                g_numLedsChanged = false;
+            }
             g_settingsChanged = false;
         }
 
@@ -53,11 +56,11 @@ namespace Switcher {
         }
     }
 
-    void init() {
+    void init(int count) {
+        numLeds = constrain(count, 1, 256);
         FastLED.addLeds<WS2812B, Pins::STRIP, GRB>(leds, numLeds);
         FastLED.setBrightness(brightness);
 
-#if !CONFIG_FREERTOS_UNICORE
         xTaskCreatePinnedToCore(
             effectsTask,
             "EffectsTask",
@@ -68,7 +71,6 @@ namespace Switcher {
             0 // Pin to Core 0
         );
         g_useTask = true;
-#endif
     }
     void setBrightness(int value) {
         brightness = constrain(value, 0, 255);
@@ -76,6 +78,7 @@ namespace Switcher {
     }
     void setNumLeds(int value) {
         numLeds = constrain(value, 1, 256);
+        g_numLedsChanged = true;
         g_settingsChanged = true;
     }
 
