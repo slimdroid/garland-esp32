@@ -24,8 +24,10 @@ namespace Settings {
 
     static Preferences preferences;
     static int cachedMode = KEY_MODE_DEF;
+    static int cachedBrightness = KEY_BRIGHTNESS_DEF;
     static bool modeDirty = false;
     static unsigned long lastModeChange = 0;
+    static unsigned long brightnessChange = 0;
 
     void saveLightModeNow() {
         preferences.begin(PREF_LIGHT, false);
@@ -34,6 +36,15 @@ namespace Settings {
         modeDirty = false;
         lastModeChange = 0;
         ESP_LOGI(TAG, "Light mode %d saved to NVS", cachedMode);
+    }
+
+    void saveBrightnessNow() {
+        preferences.begin(PREF_LIGHT, false);
+        preferences.putInt(KEY_BRIGHTNESS, cachedBrightness);
+        preferences.end();
+        modeDirty = false;
+        lastModeChange = 0;
+        ESP_LOGI(TAG, "Brightness %d saved to NVS", cachedBrightness);
     }
 
     bool getWiFiCredentials(String &ssid, String &password) {
@@ -74,13 +85,14 @@ namespace Settings {
 
         if (isOff && modeDirty) {
             saveLightModeNow();
+            saveBrightnessNow();
         }
     }
 
     void saveBrightness(const int brightness) {
-        preferences.begin(PREF_LIGHT, false);
-        preferences.putInt(KEY_BRIGHTNESS, brightness);
-        preferences.end();
+        brightnessChange = brightness;
+        modeDirty = true;
+        lastModeChange = millis();
         ESP_LOGD(TAG, "saveBrightness: brightness=%d", brightness);
     }
     void saveNumLeds(const int numLeds) {
@@ -100,6 +112,9 @@ namespace Settings {
     }
 
     void handleSettingsSync() {
-        if (modeDirty && (millis() - lastModeChange >= DEBOUNCE_MS)) saveLightModeNow();
+        if (modeDirty && (millis() - lastModeChange >= DEBOUNCE_MS)) {
+            saveLightModeNow();
+            saveBrightnessNow();
+        }
     }
 }
