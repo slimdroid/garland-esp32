@@ -1,4 +1,5 @@
 #include "Effects.h"
+#include <Arduino.h>
 #include "../board/BoardSelector.h"
 
 namespace Effects {
@@ -6,19 +7,90 @@ namespace Effects {
     int brightness = 51;    // Brightness: 20% of 255 (default)
     CRGB leds[256];         // Maximum buffer for LEDs
 
+    static Mode volatile g_mode = RAINBOW;
+    static bool volatile g_isSystemOff = false;
+    static bool volatile g_settingsChanged = false;
+    static bool g_useTask = false;
+
+    void rainbow();
+    void cylon();
+    void sparkle();
+    void fire();
+    void confetti();
+    void sinelon();
+    void juggle();
+    void bpm();
+    void snow();
+    void comet();
+    void rainbow_glitter();
+    void color_waves();
+    void theater_chase();
+    void solid_glow();
+
+    void handle_internal() {
+        if (g_settingsChanged) {
+            FastLED.setBrightness(brightness);
+            FastLED[0].setLeds(leds, numLeds);
+            FastLED.clear();
+            g_settingsChanged = false;
+        }
+
+        if (!g_isSystemOff) {
+            switch (g_mode) {
+            case RAINBOW: rainbow(); break;
+            case CYLON: cylon(); break;
+            case SPARKLE: sparkle(); break;
+            case FIRE: fire(); break;
+            case CONFETTI: confetti(); break;
+            case SINELON: sinelon(); break;
+            case JUGGLE: juggle(); break;
+            case BPM: bpm(); break;
+            case SNOW: snow(); break;
+            case COMET: comet(); break;
+            case RAINBOW_GLITTER: rainbow_glitter(); break;
+            case COLOR_WAVES: color_waves(); break;
+            case THEATER_CHASE: theater_chase(); break;
+            case SOLID_GLOW: solid_glow(); break;
+            default: break;
+            }
+            FastLED.show();
+        } else {
+            fill_solid(leds, numLeds, CRGB::Black);
+            FastLED.show();
+        }
+    }
+
+    void effectsTask(void *pvParameters) {
+        for (;;) {
+            handle_internal();
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+    }
+
     void init() {
         FastLED.addLeds<WS2812B, Pins::STRIP, GRB>(leds, numLeds);
         FastLED.setBrightness(brightness);
+
+#if !CONFIG_FREERTOS_UNICORE
+        xTaskCreatePinnedToCore(
+            effectsTask,
+            "EffectsTask",
+            4096,
+            NULL,
+            1,
+            NULL,
+            0 // Pin to Core 0
+        );
+        g_useTask = true;
+#endif
     }
     void setBrightness(int value) {
         brightness = constrain(value, 0, 255);
-        FastLED.setBrightness(brightness);
+        g_settingsChanged = true;
     }
     void setNumLeds(int value) {
         numLeds = constrain(value, 1, 256);
-        FastLED[0].setLeds(leds, numLeds);
-        FastLED.clear();
-        FastLED.show();
+        g_settingsChanged = true;
     }
 
     void rainbow() {
@@ -129,29 +201,17 @@ namespace Effects {
         fill_solid(leds, numLeds, CHSV(millis() / 50, 255, beatsin8(15, 100, 255)));
     }
 
-    void handle(Mode mode, bool isSystemOff) {
-        if (!isSystemOff) {
-            switch (mode) {
-            case RAINBOW: rainbow(); break;
-            case CYLON: cylon(); break;
-            case SPARKLE: sparkle(); break;
-            case FIRE: fire(); break;
-            case CONFETTI: confetti(); break;
-            case SINELON: sinelon(); break;
-            case JUGGLE: juggle(); break;
-            case BPM: bpm(); break;
-            case SNOW: snow(); break;
-            case COMET: comet(); break;
-            case RAINBOW_GLITTER: rainbow_glitter(); break;
-            case COLOR_WAVES: color_waves(); break;
-            case THEATER_CHASE: theater_chase(); break;
-            case SOLID_GLOW: solid_glow(); break;
-            default: break;
-            }
-            FastLED.show();
-        } else {
-            fill_solid(leds, numLeds, CRGB::Black);
-            FastLED.show();
+    void setMode(Mode mode) {
+        g_mode = mode;
+        if (!g_useTask) {
+            handle_internal();
+        }
+    }
+
+    void setSystemOff(bool isSystemOff) {
+        g_isSystemOff = isSystemOff;
+        if (!g_useTask) {
+            handle_internal();
         }
     }
 }

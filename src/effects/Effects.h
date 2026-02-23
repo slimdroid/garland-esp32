@@ -26,7 +26,8 @@ namespace Effects {
     };
 
     void init();
-    void handle(Mode mode, bool isSystemOff);
+    void setMode(Mode mode);
+    void setSystemOff(bool isSystemOff);
     void setBrightness(int value);
     void setNumLeds(int value);
 }

@@ -75,6 +75,8 @@ void setup() {
     int savedNumLeds;
     Settings::loadLightSettings(savedMode, isSystemOff, savedBrightness, savedNumLeds);
     currentMode = static_cast<Effects::Mode>(savedMode);
+    Effects::setMode(currentMode);
+    Effects::setSystemOff(isSystemOff);
     Effects::setBrightness(savedBrightness);
     Effects::setNumLeds(savedNumLeds);
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
@@ -104,16 +106,19 @@ void loop() {
         case SHORT_PRESS:
             if (!isSystemOff) {
                 currentMode = static_cast<Effects::Mode>((currentMode + 1) % Effects::NUM_MODES);
+                Effects::setMode(currentMode);
                 Settings::saveLightMode(currentMode);
                 ESP_LOGI(TAG, "Mode changed to: %d", currentMode);
             } else {
                 isSystemOff = false;
+                Effects::setSystemOff(isSystemOff);
                 Settings::saveSystemState(isSystemOff);
                 ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
             break;
         case MEDIUM_PRESS:
             isSystemOff = !isSystemOff;
+            Effects::setSystemOff(isSystemOff);
             Settings::saveSystemState(isSystemOff);
             if (isSystemOff) {
                 ESP_LOGI(TAG, "System OFF");
@@ -127,6 +132,7 @@ void loop() {
                 Bluetooth::enable();
             } else {
                 isSystemOff = false;
+                Effects::setSystemOff(isSystemOff);
                 Settings::saveSystemState(isSystemOff);
                 ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
@@ -135,9 +141,6 @@ void loop() {
         default:
             break;
     }
-
-    // Mode execution
-    Effects::handle(currentMode, isSystemOff);
 
     Settings::handleSettingsSync();
 
