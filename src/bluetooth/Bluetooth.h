@@ -44,12 +44,6 @@ namespace Bluetooth {
     void disable();
 
     /**
-     * @brief Sends device uptime via BLE
-     * @param seconds Time in seconds
-     */
-    void sendWorkedTime(uint32_t seconds);
-
-    /**
      * @brief Checks if BLE is currently connected
      * @return true if a device is connected via BLE
      */

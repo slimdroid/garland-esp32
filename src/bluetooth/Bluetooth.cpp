@@ -10,7 +10,6 @@ static const char *TAG = "BLUETOOTH";
 
 // Service and characteristic UUIDs
 #define SERVICE_REGISTRATION_UUID                       "459aa3b5-52c3-4d75-a64b-9cd76f65cfbb"
-#define SERVICE_WORK_TIME_UUID                          "cafa0333-8a16-4a59-b706-2f0e3fd38f58"
 
 #define CHARACTERISTIC_REGISTRATION_CREDENTIALS_UUID    "b9e70f80-d55e-4cd7-bec6-14be34590efc"
 #define CHARACTERISTIC_REGISTRATION_RESPONSE_UUID       "7048479a-23f2-4f5b-8113-e60e59294b5a"
@@ -19,13 +18,11 @@ static const char *TAG = "BLUETOOTH";
 // Local (module-level) states
 static BLECharacteristic *characteristicRegistrationCredentials = nullptr;
 static BLECharacteristic *characteristicRegistrationResponse = nullptr;
-static BLECharacteristic *characteristicWorkTime = nullptr;
 
 static bool bleConnected = false;
 static bool bleStarted = false;
 static bool isInitialized = false;
 static BLEServer *bleServer = nullptr;
-static BLEService *serviceWorkTime = nullptr;
 static BLEService *serviceRegistration = nullptr;
 
 static BluetoothCredentialsReceivedCallback g_credentialsCallback = nullptr;
@@ -92,7 +89,7 @@ namespace Bluetooth {
             bleServer->setCallbacks(&serverCallbacks);
         }
 
-        // Registration service — создаём только один раз
+        // Registration service — created only once
         if (serviceRegistration == nullptr) {
             serviceRegistration = bleServer->createService(SERVICE_REGISTRATION_UUID);
             characteristicRegistrationCredentials = serviceRegistration->createCharacteristic(
@@ -105,20 +102,10 @@ namespace Bluetooth {
                 BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
         }
 
-        // Work time service — создаём только один раз
-        if (serviceWorkTime == nullptr) {
-            serviceWorkTime = bleServer->createService(SERVICE_WORK_TIME_UUID);
-            characteristicWorkTime = serviceWorkTime->createCharacteristic(
-                CHARACTERISTIC_WORK_TIME_UUID,
-                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-        }
-
         serviceRegistration->start();
-        serviceWorkTime->start();
 
         BLEAdvertising *advertising = BLEDevice::getAdvertising();
         advertising->addServiceUUID(SERVICE_REGISTRATION_UUID);
-        advertising->addServiceUUID(SERVICE_WORK_TIME_UUID);
         advertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
         advertising->setMaxPreferred(0x12);
         advertising->setScanResponse(true); // Add for reliability
@@ -168,11 +155,10 @@ namespace Bluetooth {
         // but this still won't fix the hanging problem and in most cases
         // it's enough to just stop broadcasting.
 
-        // 4. Сбрасываем указатели на характеристики; сами сервисы сохраняются
-        //    в serviceRegistration / serviceWorkTime для переиспользования при повторном enable().
+        // 4. Reset characteristic pointers; the services themselves are preserved
+        //    in serviceRegistration for reuse on subsequent enable() calls.
         characteristicRegistrationCredentials = nullptr;
         characteristicRegistrationResponse = nullptr;
-        characteristicWorkTime = nullptr;
 
         if (g_stateCallback) {
             g_stateCallback(BT_DISABLED);
@@ -186,13 +172,6 @@ namespace Bluetooth {
             characteristicRegistrationResponse->notify();
         }
         if (success == true) disable();
-    }
-
-    void sendWorkedTime(uint32_t seconds) {
-        if (bleConnected && characteristicWorkTime) {
-            characteristicWorkTime->setValue(seconds);
-            characteristicWorkTime->notify();
-        }
     }
 
     bool isConnected() {

@@ -19,7 +19,6 @@ Button button(Pins::BUTTON);
 BtIndicator btIndicator;
 Effects::Mode currentMode = Effects::RAINBOW;
 bool isSystemOff = false;
-unsigned long timerMillis = 0;
 
 bool onCommandMessageReceived(const String &message) {
     return DataParser::parse(message);
@@ -90,17 +89,8 @@ void setup() {
     Bluetooth::init(onBleDataReceived, onBleStateChanged);
 }
 
-static void handleTimer() {
-    if (millis() - timerMillis > 1000) {
-        timerMillis = millis();
-        Bluetooth::sendWorkedTime(timerMillis / 1000);
-    }
-}
-
 void loop() {
     btIndicator.handle();
-
-    handleTimer();
 
     switch (button.handle()) {
         case SHORT_PRESS:
