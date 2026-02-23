@@ -25,6 +25,7 @@ namespace WiFiManager {
 
     void init(WifiStatusCallback callback) {
         statusCallback = callback;
+        WiFi.mode(WIFI_STA);
         WiFi.disconnect(true);
         delay(100);
         WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
