@@ -8,7 +8,7 @@
 #include "socket/SocketManager.h"
 #include "parser/DataParser.h"
 #include "board/BoardSelector.h"
-#include "effects/Effects.h"
+#include "switcher/Switcher.h"
 
 #undef ARDUHAL_LOG_FORMAT
 #define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_ ## letter "[" #letter "]: " format ARDUHAL_LOG_RESET_COLOR "\r\n"
@@ -66,8 +66,8 @@ void onBleStateChanged(BT_ConnectionState state) {
 void setup() {
     Serial.begin(115200);
 
-    // Effects and FastLED initializing
-    Effects::init();
+    // Switcher and FastLED initializing
+    Switcher::init();
 
     // Restore settings
     int savedMode;
@@ -75,10 +75,10 @@ void setup() {
     int savedNumLeds;
     Settings::loadLightSettings(savedMode, isSystemOff, savedBrightness, savedNumLeds);
     currentMode = static_cast<Effects::Mode>(savedMode);
-    Effects::setMode(currentMode);
-    Effects::setSystemOff(isSystemOff);
-    Effects::setBrightness(savedBrightness);
-    Effects::setNumLeds(savedNumLeds);
+    Switcher::setMode(currentMode);
+    Switcher::setSystemOff(isSystemOff);
+    Switcher::setBrightness(savedBrightness);
+    Switcher::setNumLeds(savedNumLeds);
     ESP_LOGI(TAG, "System state: %s", isSystemOff ? "OFF" : "ON");
     ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
     ESP_LOGI(TAG, "Brightness: %d, LED count: %d", savedBrightness, savedNumLeds);
@@ -106,19 +106,19 @@ void loop() {
         case SHORT_PRESS:
             if (!isSystemOff) {
                 currentMode = static_cast<Effects::Mode>((currentMode + 1) % Effects::NUM_MODES);
-                Effects::setMode(currentMode);
+                Switcher::setMode(currentMode);
                 Settings::saveLightMode(currentMode);
                 ESP_LOGI(TAG, "Mode changed to: %d", currentMode);
             } else {
                 isSystemOff = false;
-                Effects::setSystemOff(isSystemOff);
+                Switcher::setSystemOff(isSystemOff);
                 Settings::saveSystemState(isSystemOff);
                 ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }
             break;
         case MEDIUM_PRESS:
             isSystemOff = !isSystemOff;
-            Effects::setSystemOff(isSystemOff);
+            Switcher::setSystemOff(isSystemOff);
             Settings::saveSystemState(isSystemOff);
             if (isSystemOff) {
                 ESP_LOGI(TAG, "System OFF");
@@ -132,7 +132,7 @@ void loop() {
                 Bluetooth::enable();
             } else {
                 isSystemOff = false;
-                Effects::setSystemOff(isSystemOff);
+                Switcher::setSystemOff(isSystemOff);
                 Settings::saveSystemState(isSystemOff);
                 ESP_LOGI(TAG, "System ON, Mode: %d", currentMode);
             }

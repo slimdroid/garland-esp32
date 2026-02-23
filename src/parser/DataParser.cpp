@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include "DataParser.h"
 #include "../settings/Settings.h"
+#include "../switcher/Switcher.h"
 #include "../effects/Effects.h"
 
 namespace DataParser {
@@ -73,7 +74,7 @@ namespace DataParser {
                 ESP_LOGW(TAG, "Invalid brightness value: %d", value);
                 return false;
             }
-            Effects::setBrightness(value);
+            Switcher::setBrightness(value);
             Settings::saveBrightness(value);
             ESP_LOGI(TAG, "Brightness set to: %d", value);
             return true;
@@ -85,7 +86,7 @@ namespace DataParser {
                 ESP_LOGW(TAG, "Invalid LED count: %d", value);
                 return false;
             }
-            Effects::setNumLeds(value);
+            Switcher::setNumLeds(value);
             Settings::saveNumLeds(value);
             ESP_LOGI(TAG, "LED count set to: %d", value);
             return true;
