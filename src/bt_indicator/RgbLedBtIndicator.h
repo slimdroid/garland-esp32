@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FastLED.h>
+#include <Adafruit_NeoPixel.h>
 #include "IBtIndicator.h"
 
 /**
@@ -12,18 +12,18 @@
  *   BT_DISCONNECTED — blue slow blink (1000ms)
  *   BT_DISABLED     — LED off
  *
- * @tparam PIN GPIO pin number of the RGB LED (compile-time constant required by FastLED)
+ * @tparam PIN GPIO pin number of the RGB LED
  */
 template<uint8_t PIN>
 class RgbLedBtIndicator : public IBtIndicator {
 public:
     RgbLedBtIndicator()
-        : _blinkIntervalMs(0),
+        : _pixel(1, PIN, NEO_GRB + NEO_KHZ800),
+          _blinkIntervalMs(0),
           _lastBlinkTime(0),
           _blinkState(false) {
-        FastLED.addLeds<WS2812, PIN, GRB>(_leds, 1).setCorrection(TypicalLEDStrip);
-        _leds[0] = CRGB::Black;
-        FastLED.show();
+        _pixel.begin();
+        _pixel.setPixelColor(0, 0);
     }
 
     void setState(BT_ConnectionState state) override {
@@ -40,8 +40,8 @@ public:
             case BT_DISABLED:
                 _blinkIntervalMs = 0;
                 _blinkState = false;
-                _leds[0] = CRGB::Black;
-                FastLED.show();
+                _pixel.setPixelColor(0, 0);
+                _pixel.show();
                 break;
         }
     }
@@ -53,13 +53,13 @@ public:
         if (millis() - _lastBlinkTime >= static_cast<unsigned long>(_blinkIntervalMs)) {
             _lastBlinkTime = millis();
             _blinkState = !_blinkState;
-            _leds[0] = _blinkState ? CRGB::Blue : CRGB::Black;
-            FastLED.show();
+            _pixel.setPixelColor(0, _blinkState ? _pixel.Color(0, 0, 255) : 0);
+            _pixel.show();
         }
     }
 
 private:
-    CRGB _leds[1];
+    Adafruit_NeoPixel _pixel;
     int _blinkIntervalMs;
     unsigned long _lastBlinkTime;
     bool _blinkState;
