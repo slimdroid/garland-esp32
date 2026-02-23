@@ -81,6 +81,8 @@ void setup() {
     ESP_LOGI(TAG, "Loaded mode: %d", currentMode);
     ESP_LOGI(TAG, "Brightness: %d, LED count: %d", savedBrightness, savedNumLeds);
 
+    button.setSystemState(&isSystemOff);
+
     DataParser::setContext(&currentMode, &isSystemOff);
 
     WiFiManager::init(onWifiStatusChanged);
