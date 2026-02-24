@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Adafruit_NeoPixel.h>
+#include <board/m5nanoc6/Pins.h>
 #include "IBtIndicator.h"
 
 /**
@@ -22,6 +23,11 @@ public:
           _blinkIntervalMs(0),
           _lastBlinkTime(0),
           _blinkState(false) {
+#ifdef BOARD_M5_NANOC6
+        pinMode(Pins::LED_PWR, OUTPUT);
+        digitalWrite(Pins::LED_PWR, HIGH);
+#endif
+
         _pixel.begin();
         _pixel.setPixelColor(0, 0);
     }
