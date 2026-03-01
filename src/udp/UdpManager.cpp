@@ -2,11 +2,9 @@
 #include "UdpManager.h"
 #include <WiFi.h>
 
-#define COMMAND_MARK "Cmd"
-
 namespace UdpManager {
     static const char *TAG = "UDP";
-
+    static const String COMMAND_MARK = "Cmd";
     static WiFiUDP udp;
     static bool udpRunning = false;
     static UdpMessageCallback messageCallback = nullptr;
@@ -78,10 +76,13 @@ namespace UdpManager {
                 // Notify listener if registered
                 if (messageCallback != nullptr) {
                     udp.beginPacket(udp.remoteIP(), udp.remotePort());
-                    if (messageCallback(message) == true) {
-                        udp.print("SUCCESS");
+                    String request = message.substring(COMMAND_MARK.length(), message.length() - 1);
+                    if (messageCallback(request) == true) {
+                        String response = "{\"status\":\"Success\"}";
+                        udp.print(response);
                     } else {
-                        udp.print("FAILURE");
+                        String response = "{\"status\":\"Failure\"}";
+                        udp.print(response);
                     }
                     udp.endPacket();
                 }

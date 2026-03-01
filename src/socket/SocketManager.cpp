@@ -50,9 +50,11 @@ namespace SocketManager {
                 ESP_LOGD(TAG, "TCP Received: %s", data.c_str());
                 if (messageCallback != nullptr) {
                     if (messageCallback(data) == true) {
-                        currentClient.println("SUCCESS");
+                        String response = "{\"status\":\"Success\"}";
+                        currentClient.println(response);
                     } else {
-                        currentClient.println("FAILURE");
+                        String response = "{\"status\":\"Failure\"}";
+                        currentClient.println(response);
                     }
                 }
             }

@@ -8,7 +8,7 @@
 /**
  * @brief Discovery response message
  */
-#define HANDSHAKE_MESSAGE "GARLAND_DISCOVERY"
+#define HANDSHAKE_MESSAGE "LUMIX_DISCOVERY"
 
 /**
  * @brief Callback type for receiving UDP messages

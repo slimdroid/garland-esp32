@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "DataParser.h"
+#include <wifi/WifiManager.h>
 #include "../settings/Settings.h"
 #include "../switcher/Switcher.h"
 #include "../effects/Effects.h"
@@ -40,6 +41,7 @@ namespace DataParser {
             if (mode >= 0 && mode < Effects::NUM_MODES) {
                 *s_currentMode = static_cast<Effects::Mode>(mode);
                 Settings::saveLightMode(mode);
+                Switcher::setMode(*s_currentMode);
                 ESP_LOGI(TAG, "Mode set to: %d", mode);
                 return true;
             }
@@ -53,6 +55,7 @@ namespace DataParser {
             if (state == 0 || state == 1) {
                 *s_isSystemOff = (state == 0);
                 Settings::saveSystemState(*s_isSystemOff);
+                Switcher::setSystemOff(*s_isSystemOff);
                 ESP_LOGI(TAG, "System power set to: %s", *s_isSystemOff ? "OFF" : "ON");
                 return true;
             }
@@ -94,9 +97,10 @@ namespace DataParser {
 
         if (strcmp(cmd, "set_wifi") == 0) {
             const char *ssid = doc["ssid"];
-            const char *pass = doc["pass"] | "";
+            const char *password = doc["pass"] | "";
             if (ssid && strlen(ssid) > 0) {
-                Settings::setWiFiCredentials(String(ssid), String(pass));
+                Settings::setWiFiCredentials(String(ssid), String(password));
+                WiFiManager::connect(ssid, password);
                 ESP_LOGI(TAG, "WiFi credentials saved - SSID: %s", ssid);
                 return true;
             }
